@@ -114,4 +114,9 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+
 /image/
+/ResourceHacker_zh【修改程序图标】.exe
+/备忘录.md
+/download.exe
