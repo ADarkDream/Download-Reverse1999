@@ -1,17 +1,21 @@
 const request = require("request");
-const fs = require("fs");
-
 const https = require('https');
-// const fetch = require('node-fetch');
+const fs = require("fs");
 const {pipeline} = require('stream');
 const {promisify} = require('util');
 const pipelineAsync = promisify(pipeline);
-
 const express = require('express');
 const app = express();
 const port = 3000; // 您可以使用任何端口
+const  probe = require('probe-image-size')
 
-process.env.NODE_NO_WARNINGS = '1';//忽略掉fetch的实验性警告，使它不打印到控制台
+let PCUrlArr = []
+let phoneUrlArr = []
+let imgArr = []
+let errorUrlStr =''
+
+
+process.env.NODE_NO_WARNINGS = '';//忽略掉fetch的实验性警告，使它不打印到控制台
 
 app.get('/', async (req, res) => {
     try {
@@ -23,8 +27,8 @@ app.get('/', async (req, res) => {
 
 // 启动服务器
 app.listen(port, () => {
-        // console.log(`请打开这个网址：127.0.0.1: ${port}`);
-        console.log('---------------------------------------------脚本说明-----------------------------------------\r\n')
+        console.log(`本脚本运行过程中会占用端口：127.0.0.1: ${port}，关闭脚本即可释放`);
+        console.log('---------------------------------------------脚本说明(V1.2.2)-----------------------------------------\r\n')
         console.log('| 本脚本程序仅用于批量下载1999国服官网的图片，仅作为技术分享，请勿用于其他用途。侵权请联系删除。\n' +
             '\n' +
             '| 联系方式： [微博@玖优梦]（微博私信我会自动回复以下链接）\n' +
@@ -35,13 +39,14 @@ app.listen(port, () => {
             '\n' +
             '| 文件夹分类说明请见微博专栏第七篇文章：[微博@玖优梦的专栏文章](https://weibo.com/ttarticle/x/m/show#/id=2309404942430960222221&_wb_client_=1)\n' +
             '| 预防网盘链接失效，可以保存：[1999资源总表：金山云文档](https://kdocs.cn/l/cjkqngyqWLTI)')
-        console.log('\r\n-----------------------------------下面是程序输出(可忽略)------------------------------------\r\n')
-        console.log('【注意：首次运行可能因为联网权限问题无法成功下载图片，授权之后关闭程序程序再次运行即可】\r\n')
+        console.log('\r\n-----------------------------------下面是程序错误输出------------------------------------\r\n')
+        console.log('【注意：首次运行可能因为提醒联网权限的问题无法成功下载图片，授权之后关闭程序然后再次运行即可】\r\n')
     }
 )
 
 start()
 
+//主函数
 async function start() {
     try {
         //判断是否存在url.txt文件
@@ -59,6 +64,7 @@ async function start() {
         // 检查目标文件夹是否存在，如果不存在则创建
         if (!fs.existsSync(PCDir)) fs.mkdirSync(PCDir, {recursive: true})
         if (!fs.existsSync(phoneDir)) fs.mkdirSync(phoneDir, {recursive: true})
+        if (!fs.existsSync('./urlList')) fs.mkdirSync('./urlList', {recursive: true})
 
         //因为map和forEach中不能直接使用await函数，所以得在外面加一层Promise.all
         const resArr = await Promise.all(
@@ -76,10 +82,11 @@ async function start() {
                     let [hash, format] = halfName.split('\.')
                     newName = (name + '.' + format).replace(/%20/g, " ") //拼接新名称并替换%20为空格
                 }
-                // console.log('newName', newName)  //185 1125x2436.jpg
-                //判断是竖屏图还是横屏图，开始下载
-                if (newName.includes('1125')) await downloadImg(imgUrl, phoneDir + newName).catch(error => console.error(`下载失败，图片链接为：${imgUrl}`, error)); //竖屏图
-                if (newName.includes('2560')) await downloadImg(imgUrl, PCDir + newName).catch(error => console.error(`下载失败，图片链接为：${imgUrl}`, error)); //横屏图
+                // console.log('正在下载：', newName)  //185 1125x2436.jpg
+                //开始下载图片,并对图片分类处理
+                await downloadImg(imgUrl, PCDir + newName, phoneDir + newName,newName).catch(error => console.error(`下载失败，图片链接为：${imgUrl}`, error));
+
+                imgArr.push({imgName: newName, imgUrl, imgPath: PCDir + newName})
                 return imgUrl
             }))
 
@@ -87,23 +94,21 @@ async function start() {
         console.log('| 竖屏图片已下载到/image/phoneImg/目录下')
         console.log('| 横屏图片已下载到/image/PCImg/目录下')
         console.log('| 重复的图片只保留一份。')
-        const newArray = resArr.slice(1)
-        const pcUrlListStr = newArray.filter(item => {
-            if (item !== undefined) return item.includes('2560')
-        }).map(item => "'" + item + "',").join('\r\n')
-        const phoneUrlListStr = newArray.filter(item => {
-            if (item !== undefined) return item.includes('1125')
-        }).map(item => "'" + item + "',").join('\r\n')
+        const newArray = resArr.filter(item => {
+            return item !== undefined
+        })
 
-        fs.writeFileSync('./pcUrlList.txt', "[\r\n" + pcUrlListStr + "\r\n]")
-        fs.writeFileSync('./phoneUrlList.txt', "[\r\n" + phoneUrlListStr + "\r\n]")
-        fs.writeFileSync('./newUrl.txt', newArray.join('\r\n'))
+        // fs.writeFileSync('./AllUrl.json', JSON.stringify(imgArr))
+        fs.writeFileSync('./urlList/newUrl.txt', newArray.join('\r\n'))
+        fs.writeFileSync('./urlList/PCUrlList.json', JSON.stringify(PCUrlArr))
+        fs.writeFileSync('./urlList/phoneUrlList.json', JSON.stringify(phoneUrlArr))
+        if (errorUrlStr!=='') fs.writeFileSync('./urlList/errorUrl.txt', errorUrlStr)
         console.log('\r\n--  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --\r\n')
-        console.log('| 网址筛选成功,链接存放到以下三个文件中（重复的链接不会去除）：')
-        console.log('| pcUrlList.txt 中存放横屏壁纸链接（数组格式，可以直接作为网页数据）')
-        console.log('| phoneUrlList.txt 中存放竖屏壁纸链接（数组格式，可以直接作为网页数据）')
-        console.log('| newUrl.txt中存放全部壁纸链接（空格隔开,可以复制到其他下载器批量下载）')
-        console.log('深蓝壁纸图片命名有问题，所以有几张横屏图和竖屏图的url和文件分类可能有问题，现在还需要自己手动改一下，等之后有空了再解决.')
+        console.log('| 网址筛选成功,共' + newArray.length + '个链接，存放到以下三个文件中（重复的链接不会去除）：')
+        console.log('| ./urlList/PCUrlList.json 中存放横屏壁纸链接['+PCUrlArr.length+'个]（JSON格式，可以直接作为网页数据）')
+        console.log('| ./urlList/phoneUrlList.json 中存放竖屏壁纸链接['+phoneUrlArr.length+'个]（JSON格式，可以直接作为网页数据）')
+        console.log('| ./urlList/newUrl.txt中存放全部壁纸链接（空格隔开,可以复制到其他下载器批量下载）')
+        if (errorUrlStr!=='') console.log('| ./urlList/errorUrl.txt中存放可能下载出错的壁纸链接，请自行手动下载，上述JSON文件中不保存下载失败的图片链接')
         console.log('\r\n----------------------------------------------------------------------------------------------\r\n')
     } catch (err) {
         console.log(err)
@@ -123,60 +128,41 @@ async function getUrl(str) {
 }
 
 
-//图片下载函数第一版：需要限制同时进行的下载请求数量，nodejs下载请求过多会闪退
-/*
-async function downImg(url, imgPath) {
-    return ()=>new Promise((resolve, reject) => {
-        request
-            .get(url)//options{}对象
-            .on('response', (response) => {
-                console.log("下载的图片类型为：", response.headers['content-type'])
-            })
-            .pipe(fs.createWriteStream(imgPath))
-            .on("error", (e) => {
-                console.log("下载错误", e)
-                resolve('');
-            })
-            .on("finish", () => {
-                resolve("下载成功");
-            })
-            .on("close", () => {
-                // console.log("下载模块关闭");
-            })
-    })
-}
-*/
+//图片下载函数，只能一张一张下载，下载并分类
+async function downloadImg(imgUrl, PCImgPath, phoneImgPath, imgName) {
+    try {
+        //默认存入PCImg文件夹
+        const fileWriter = fs.createWriteStream(PCImgPath);
+        const response = await fetch(imgUrl);
+        // 检查响应是否成功（状态码在200-299之间）
+        if (!response.ok) new Error(`无法获取图片：${response.statusText}`);
+        // 确保响应主体可读
+        if (!response.body) new Error(`响应主体不可读`);
 
-//图片下载函数第二版，只能一张一张下载
-async function downloadImg(url, imgPath) {
-    const fileWriter = fs.createWriteStream(imgPath);
-    const response = await fetch(url);
-    await pipelineAsync(response.body, fileWriter);
-    console.log(`下载成功,已存入${imgPath}`);
-}
+        //确保文件已写入
+        await pipelineAsync(response.body, fileWriter)
 
-//图片下载函数第三版，待修改。现将图片链接分类，再传入下面的函数批量下载
-/*
-downloadImages函数将[urls数组]切割为多个chunk，并逐个执行每个chunk的下载任务，
-每个chunk中同时下载的任务数量受concurrencyLimit参数控制。
+        // 确保文件正确写入
+        if (fs.statSync(PCImgPath).size === 0) new Error('下载的文件为空(0KB)');
 
-async function downloadImages(urls, outputPath, concurrencyLimit) {
-    const chunks = [];
-    while (urls.length) {
-        chunks.push(urls.splice(0, concurrencyLimit));
+        //检查图片分辨率，并进行分类
+         const readStream = fs.createReadStream(PCImgPath);
+        const dimensions = await probe(readStream);
+        readStream.destroy(); // 关闭流
+        // const dimensions = await sharp(PCImgPath).metadata();
+        if (dimensions.width > dimensions.height) PCUrlArr.push({imgName, imgUrl, imgPath: PCImgPath})
+        else {
+            // 移动图片
+            fs.rename(PCImgPath, phoneImgPath, err => {
+                if (err)  new Error(err.message)
+            })
+            //将地址写入phoneUrlArr
+            phoneUrlArr.push({imgName, imgUrl, imgPath: phoneImgPath})
+        }
+
+    } catch (err) {
+        console.log('\r\n'+err.message)
+        console.log('图片' + imgName + '可能未下载成功，请手动下载：' + imgUrl)
+        errorUrlStr+=imgUrl+'\r\n'
     }
-
-    for (const chunk of chunks) {
-        await Promise.all(chunk.map(url => downloadImage(url, outputPath)));
-    }
-
-    console.log('所有图片下载完成');
 }
-
-async function downloadImage(url, outputPath) {
-    const response = await fetch(url);
-    const fileWriter = fs.createWriteStream(path.join(outputPath, path.basename(url)));
-    await pipelineAsync(response.body, fileWriter);
-    console.log(`${url} 下载完成`);
-}
-*/
