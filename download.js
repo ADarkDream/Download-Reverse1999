@@ -37,6 +37,10 @@ app.listen(port, () => {
             '\n' +
             '| [百度网盘链接](https://pan.baidu.com/s/1A4o9VM4kPa_vzWZEtHiZSA?pwd=1999)\n' +
             '\n' +
+             '| 为方便使用，已将功能上线网站并提供分类筛选和下载功能\n' +
+            '\n' +
+             '| [默默的小站](https://muxidream.cn/reverse1999)\n' +
+            '\n' +
             '| 文件夹分类说明请见微博专栏第七篇文章：[微博@玖优梦的专栏文章](https://weibo.com/ttarticle/x/m/show#/id=2309404942430960222221&_wb_client_=1)\n' +
             '| 预防网盘链接失效，可以保存：[1999资源总表：金山云文档](https://kdocs.cn/l/cjkqngyqWLTI)')
         console.log('\r\n-----------------------------------下面是程序错误输出------------------------------------\r\n')

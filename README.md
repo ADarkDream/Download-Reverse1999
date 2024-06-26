@@ -12,6 +12,10 @@
 >
 > 百度网盘链接：[点击前往百度网盘](https://pan.baidu.com/s/1A4o9VM4kPa_vzWZEtHiZSA?pwd=1999)
 >
+> 为方便使用，已将本项目功能上线，可前往[默默的小站](https://muxidream.cn/reverse1999)分类筛选并下载([详见方案三](#mark三通过网站下载壁纸mark))
+> 
+> 百度网盘链接：[点击前往百度网盘](https://pan.baidu.com/s/1A4o9VM4kPa_vzWZEtHiZSA?pwd=1999)
+>
 > 详细说明请见微博专栏第七篇文章：[微博@玖优梦的专栏文章](https://weibo.com/ttarticle/x/m/show#/id=2309404942430960222221&_wb_client_=1)
 > 预防网盘链接失效可以保存：[1999资源总表：金山云文档](https://kdocs.cn/l/cjkqngyqWLTI)
 
@@ -90,7 +94,7 @@
 ### <mark>三、通过网站下载壁纸</mark>
 > ​    说明：
 >
-> ​    （1）为方便实用，已将本项目功能上线
+> ​    （1）为方便使用，已将本项目功能上线
 >
 > ​    （2）1999server.js 仅用于解决批量下载深蓝官网壁纸的跨域问题
 >
