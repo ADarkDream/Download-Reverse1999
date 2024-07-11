@@ -6,8 +6,10 @@
 >
 > 项目地址：[Gitee@默默](https://gitee.com/MuXi-Dream/download-reverse1999) ；[GitHub@默默](https://github.com/ADarkDream/Download-Reverse1999) ; [API文档](https://apifox.com/apidoc/auth-shared-70082832-e502-49ac-a386-35af15bfd747?redirect=%2Fshared-70082832-e502-49ac-a386-35af15bfd747%2Fapi-186774719&&type=shareDoc)
 >
->API文档主要是壁纸链接表及角色信息表，用于给图片分类，可前往下方“默默的小站”一览。如有需要可找我要密码
+> API文档主要是壁纸链接表及角色信息表，用于给图片分类，见下方“默默的小站”。如有需要API文档可找我要密码
 > 
+> 为方便使用，已将本项目功能上线，可前往[默默的小站](https://muxidream.cn/reverse1999)分类筛选并下载([详见方案三](#mark三通过网站下载壁纸mark))
+>
 > 其它联系方式：[微博@玖优梦](https://weibo.com/u/6869134755)（**微博私信我会自动回复链接**）
 >
 > 如果你嫌麻烦，我有已整理好的绝大多数官方国服和国际服的图片资源：
@@ -15,12 +17,12 @@
 > 百度网盘链接：[重返未来1999](https://pan.baidu.com/s/1A4o9VM4kPa_vzWZEtHiZSA?pwd=1999)
 >
 >  ![树状结构图](description/树状结构图.png)
-> 
-> 为方便使用，已将本项目功能上线，可前往[默默的小站](https://muxidream.cn/reverse1999)分类筛选并下载([详见方案三](#mark三通过网站下载壁纸mark))
 >
 > 详细说明请见微博专栏第七篇文章：[微博@玖优梦的专栏文章](https://weibo.com/ttarticle/x/m/show#/id=2309404942430960222221&_wb_client_=1)
 > 
-> 预防网盘链接失效可以保存：[1999资源总表：金山云文档](https://kdocs.cn/l/cjkqngyqWLTI#3)
+> 其实不看也罢，因为没微博会员不能修改文章，所以挺久没更新了
+> 
+> 在线文档：[1999资源总表：金山云文档](https://kdocs.cn/l/cjkqngyqWLTI#3)
 
 ## 主要文件
 >   `download.js` 方案一和方案二，主要脚本文件
