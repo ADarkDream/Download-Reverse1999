@@ -4,14 +4,18 @@
 
 > <u>*本项目仅用于批量获取1999国服官网的图片下载链接，仅作为技术分享，请勿用于其他用途。侵权请联系删除。*</u>
 >
-> 项目地址：[gitee@默默](https://gitee.com/MuXi-Dream/download-reverse1999)
+> 项目地址：[Gitee@默默](https://gitee.com/MuXi-Dream/download-reverse1999) ；[GitHub@默默](https://github.com/ADarkDream/Download-Reverse1999) ; [API文档](https://apifox.com/apidoc/auth-shared-70082832-e502-49ac-a386-35af15bfd747?redirect=%2Fshared-70082832-e502-49ac-a386-35af15bfd747%2Fapi-186774719&&type=shareDoc)
 >
+>API文档主要是壁纸链接表及角色信息表，用于给图片分类，可前往下方“默默的小站”一览。如有需要可找我要密码
+> 
 > 其它联系方式：[微博@玖优梦](https://weibo.com/u/6869134755)（**微博私信我会自动回复链接**）
 >
 > 如果你嫌麻烦，我有已整理好的绝大多数官方国服和国际服的图片资源：
 >
 > 百度网盘链接：[重返未来1999](https://pan.baidu.com/s/1A4o9VM4kPa_vzWZEtHiZSA?pwd=1999)
 >
+>  ![树状结构图](description/树状结构图.png)
+> 
 > 为方便使用，已将本项目功能上线，可前往[默默的小站](https://muxidream.cn/reverse1999)分类筛选并下载([详见方案三](#mark三通过网站下载壁纸mark))
 >
 > 详细说明请见微博专栏第七篇文章：[微博@玖优梦的专栏文章](https://weibo.com/ttarticle/x/m/show#/id=2309404942430960222221&_wb_client_=1)
