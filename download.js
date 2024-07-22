@@ -9,6 +9,8 @@ const pipelineAsync = promisify(pipeline)
 
 let errorUrlStr = ''
 let errorArr = []
+let allImgInfoArr
+let cycle = 0 //循环重试下载次数
 
 process.env.NODE_NO_WARNINGS = ''//忽略掉fetch的实验性警告，使它不打印到控制台
 
@@ -34,16 +36,17 @@ app.listen(port, async () => {
             '| 其它联系方式：[微博@玖优梦](https://weibo.com/u/6869134755)（微博私信我会自动回复链接）\r\n' +
             '| 百度网盘链接：[重返未来1999](https://pan.baidu.com/s/1A4o9VM4kPa_vzWZEtHiZSA?pwd=1999)\n' +
             '  预防网盘链接失效，可以保存：[1999资源总表：金山云文档](https://kdocs.cn/l/cjkqngyqWLTI)')
-        await start()
+        console.log('\r\n-----------------------------------下面是程序输出------------------------------------\r\n')
+        await start("./url.txt")
     }
 )
 
 
-async function start() {
+async function start(filePath) {
     try {
-        //判断是否存在url.txt文件
-        if (!fs.existsSync('url.txt'))
-            throw new Error('当前目录下没有找到url.txt文件，使用本脚本程序前请先前往项目地址阅读使用说明')
+        //判断是否存在filePath文件
+        if (!fs.existsSync(filePath))
+            throw new Error('没有找到' + filePath + '文件，使用本脚本程序前请先前往项目地址阅读使用说明')
         //定义图片存储文件夹
         const PCDir = './image/PCImg/'
         const phoneDir = './image/phoneImg/'
@@ -52,14 +55,14 @@ async function start() {
         if (!fs.existsSync(phoneDir)) fs.mkdirSync(phoneDir, {recursive: true})
         if (!fs.existsSync('./urlList')) fs.mkdirSync('./urlList', {recursive: true})
 
-        //从url.txt文件中读取数据，并分割字符串
-        const data = fs.readFileSync("./url.txt").toString()
+        //从filePath文件中读取数据，并分割字符串
+        const data = fs.readFileSync(filePath).toString()
         let allUrl = [...data.matchAll(/(https?|http|ftp|file):\/\/.*\.jpg/g)].map(match => match[0])
         allUrl = [...new Set(allUrl)] //图片链接数组,通过Set函数去重
 
-        //获取图片信息数组
-        let allImgInfoArr = await Promise.all(
-            //遍历data
+        //下载并获取图片信息数组
+        allImgInfoArr = await Promise.all(
+            //遍历图片链接数组
             allUrl.map(async (imgUrl) => {
                 //清洗数据，获取网址信息
                 const imgInfo = await getImgInfo(imgUrl)
@@ -69,9 +72,12 @@ async function start() {
 
                 // console.log('正在下载：', imgInfo.newName)  //185 1125x2436.jpg
                 //开始下载图片,并对图片分类处理
-                await downloadImg(phoneDir, imgInfo).catch(error => console.error(`下载失败，图片链接为：${imgUrl}`, error))
+                await downloadImg(phoneDir, imgInfo)
                 return imgInfo
             }))
+        //重新下载下载失败的图片，最多循环三次
+        await download(phoneDir)
+
         console.log('\r\n------------------------------------请查看以下说明-------------------------------------\r\n')
         console.log('| 竖屏图片已下载到/image/phoneImg/目录下')
         console.log('| 横屏图片已下载到/image/PCImg/目录下')
@@ -81,16 +87,10 @@ async function start() {
 
         //排序：根据官方上传时间(版本时间)和图片命名序号排序
         allImgInfoArr.sort((a, b) => {
-            const timeA = a.time
-            const timeB = b.time
-            const indexA = parseInt(a.index, 10)
-            const indexB = parseInt(b.index, 10)
-            if (timeA === timeB) return indexA - indexB
-            else return timeA - timeB
+            if (a.time === b.time) return a.index - b.index
+            else return a.time - b.time
         })
 
-        //清洗： 清洗空的数据,必须赋给新数组
-        // const resArr = allImgInfoArr.filter(item => item !== undefined)
         //分类：分类导出
         let PCUrlArr = []
         let phoneUrlArr = []
@@ -108,19 +108,17 @@ async function start() {
         console.log('| ./urlList/PCUrlList.json 中存放横屏壁纸信息[' + PCUrlArr.length + '条]（JSON格式）')
         console.log('| ./urlList/phoneUrlList.json 中存放竖屏壁纸信息[' + phoneUrlArr.length + '条]（JSON格式）')
         console.log('| ./urlList/allUrl.txt中存放全部壁纸链接（TXT格式,网址通过空格隔开,可以复制到其他下载器批量下载）')
-        if (errorUrlStr !== '') {
+        if (errorUrlStr !== ''&&errorArr!==[]) {
             fs.writeFileSync('./urlList/errorUrl.txt', errorUrlStr)
             fs.writeFileSync('./urlList/errorUrlList.json', JSON.stringify(errorArr))
             console.log('\r\n| 本次下载有图片下载出错,上述JSON文件中包含下载失败的图片信息，请手动修改错误的图片的分类信息')
             console.log('| ./urlList/errorUrl.txt中存放可能下载出错的壁纸链接，请自行手动下载')
             console.log('| ./urlList/errorUrl.json中存放可能下载出错的壁纸信息[' + errorArr.length + '条]（JSON格式）')
             console.log('| 建议将文件夹image和urlList备份后,将errorUrl.txt复制并重命名为url.txt,再重新运行本脚本')
-
         }
         console.log('\r\n---------------------------图片下载结束，关闭本窗口即可退出程序----------------------------')
         console.log('---------------------------如果是脚本运行则使用“Ctrl+C键”停止运行----------------------------\r\n')
     } catch (err) {
-        console.log('\r\n-----------------------------------下面是程序错误输出------------------------------------\r\n')
         console.log(err.message)
         console.log('\r\n--------------------------------------已停止运行----------------------------------------\r\n')
     }
@@ -130,13 +128,8 @@ async function start() {
 //数据清洗方法：获取图片信息
 async function getImgInfo(imgUrl) {
 //设定正则匹配规则
-//     const urlReg = /(https?|http|ftp|file):\/\/.*\.jpg/g//这个规则刚好满足匹配1999官网的图片链接，如：https://gamecms-res.sl916.com/official_website_resource/50001/4/PICTURE/20231114/94 1125x2436_ab8fa9a53d16415297e2d2160d5a7de6.jpg
     const indexReg = /\d{1,3}/g //匹配连续的1-3位数字
-    // imgUrl = imgUrl.replace(/\s/g, "%20")//替换网址间的空格获取网址
-    // imgUrl = imgUrl.match(urlReg)//是一个数组
-    // if (imgUrl === null) return //匹配到空的则返回
     // //分割图片信息
-    // const imgUrl = imgUrl[0]
     const strList = imgUrl.split('/')
     const time = Number(strList[strList.length - 2]) //这个规则匹配文件夹名，如：20231114
     const oldName = strList[strList.length - 1].replace(/%20/g, ' ')   //获取图片名称并替换20%为空格，例如：185%201125x2436_16e74393815d4aacbbbbb60c8f106de0.jpg
@@ -219,7 +212,7 @@ async function downloadImg(newPath, imgInfo) {
             imgInfo.sort = 1//1为竖屏壁纸
 
             // 移动图片
-            fs.rename(PCImgPath, phoneImgPath, err => {
+            await fs.promises.rename(PCImgPath, phoneImgPath, err => {
                 if (err) new Error(err.message)
             })
         }
@@ -228,7 +221,40 @@ async function downloadImg(newPath, imgInfo) {
         console.log('\r\n' + err.message)
         console.log('图片' + imgInfo.newName + '可能未下载成功，请检查路径：' + imgInfo.imgPath + '或路径：' + newPath + imgInfo.newName)
         console.log('\r\n如图片有问题请手动下载：' + imgInfo.imgUrl)
-        errorUrlStr += imgInfo.imgUrl + ',\n'
+        errorUrlStr += imgInfo.imgUrl + '\r\n'
         errorArr.push(imgInfo)
     }
+}
+
+//重新下载下载失败的图片
+async function download(phoneDir) {
+    console.log('\r\n--------------------------------------正在重新下载下载失败的图片--------------------------------------')
+    const errorList = errorArr
+    errorUrlStr = ''
+    errorArr = []
+    const result = await Promise.all(
+        //遍历图片链接数组
+        errorList.map(async (imgInfo) => {
+            // console.log('正在下载：', imgInfo.newName)  //185 1125x2436.jpg
+            //开始下载图片,并对图片分类处理
+            await downloadImg(phoneDir, imgInfo)
+            return imgInfo
+        }))
+    allImgInfoArr = mergeArrays(allImgInfoArr, result) //合并两个数组
+
+    cycle++
+    if (cycle >2) return console.log('已重试三次下载，仍有错误，已退出递归')
+    if (errorUrlStr !== '') await download(phoneDir) //如果还有下载错误，则递归
+    console.log('--------------------------------------下载失败的图片已成功重新下载--------------------------------------')
+}
+
+//合并数组
+function mergeArrays(target, update) {
+    // 将两个数组添加到对象中，imgUrl为key，数组的值为value，合并之后把对象转为数组返回
+    let obj = {}
+    target.forEach(item => obj[item.imgUrl] = item)
+    // 遍历新的数组，更新或插入到 aDict 中
+    update.forEach(item => obj[item.imgUrl] = item)
+
+    return Object.values(obj)// 将字典转换回数组
 }

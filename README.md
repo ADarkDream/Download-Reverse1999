@@ -31,7 +31,7 @@
 > 
 >   `package-lock.json` 锁定安装时的包版本号
 > 
->   `package.json` 锁定安装时的包版本号
+>   `package.json` 安装的包版本号
 > 
 >   `url.txt` 初始下载链接
 
