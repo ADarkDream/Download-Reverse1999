@@ -1,71 +1,72 @@
 const express = require('express')
 const app = express()
-const port = 3000 // 您可以使用任何端口
 const probe = require('probe-image-size')//检查图片分辨率
 const fs = require("fs")
-const {pipeline} = require('stream')
-const {promisify} = require('util')
+const { pipeline } = require('stream')
+const { promisify } = require('util')
 const pipelineAsync = promisify(pipeline)
+const { port, filePath, PCDir, phoneDir, listPath, cycle, targetVersions, versions } = require('./config')
+
 
 let errorUrlStr = ''
 let errorArr = []
-let allImgInfoArr
-let cycle = 0 //循环重试下载次数
+let allImgInfoArr = []
+// 版本时间和版本名称的映射对象
+const timeVersionMap = {}
 
 process.env.NODE_NO_WARNINGS = ''//忽略掉fetch的实验性警告，使它不打印到控制台
 
-app.get('/', async (req, res) => {
-    try {
-        res.send('你好，不用在意这个窗口，请查看文件夹中你需要下载的图片')
-    } catch (err) {
-        console.log(err)
-    }
-})
-
 // 启动服务器
 app.listen(port, async () => {
-        console.log('---------------------------------------------脚本说明(V1.2.4)-----------------------------------------\r\n')
-        console.log(`【本脚本运行过程中会占用端口：127.0.0.1: ${port}，关闭脚本即可释放】\n` +
-            '【注意：首次运行可能因为提醒联网权限的问题无法成功下载图片，授权之后关闭程序然后再次运行即可】\n' +
-            '| 本脚本程序仅用于批量下载1999国服官网的图片，仅作为技术分享，请勿用于其他用途。侵权请联系删除。\r\n' +
-            '| 项目地址：\n' +
-            ' [Gitee@默默](https://gitee.com/MuXi-Dream/download-reverse1999) ；\n' +
-            ' [GitHub@默默](https://github.com/ADarkDream/Download-Reverse1999)  \n' +
-            ' [API文档](https://apifox.com/apidoc/auth-shared-70082832-e502-49ac-a386-35af15bfd747?redirect=%2Fshared-70082832-e502-49ac-a386-35af15bfd747%2Fapi-186774719&&type=shareDoc)API文档主要是壁纸链接表及角色信息表，用于给图片分类，见下方[默默的小站]。如有需要API文档可找我要密码\r\n' +
-            '| 为方便使用，已将本项目功能上线，可前往[默默的小站](https://muxidream.cn/reverse1999)分类筛选并下载\r\n' +
-            '| 其它联系方式：[微博@玖优梦](https://weibo.com/u/6869134755)（微博私信我会自动回复链接）\r\n' +
-            '| 百度网盘链接：[重返未来1999](https://pan.baidu.com/s/1A4o9VM4kPa_vzWZEtHiZSA?pwd=1999)\n' +
-            '  预防网盘链接失效，可以保存：[1999资源总表：金山云文档](https://kdocs.cn/l/cjkqngyqWLTI)')
-        console.log('\r\n-----------------------------------下面是程序输出------------------------------------\r\n')
-        await start("./url.txt")
-    }
+    console.log('---------------------------------------------脚本说明(V1.3.0)-----------------------------------------\r\n')
+    console.log(`【本脚本运行过程中会占用端口：127.0.0.1: ${port}，关闭脚本即可释放】\n` +
+        '【注意：首次运行可能因为提醒联网权限的问题无法成功下载图片，授权之后关闭程序然后再次运行即可】\n' +
+        '| 本脚本程序仅用于批量下载1999国服官网的图片，仅作为技术分享，请勿用于其他用途。侵权请联系删除。\r\n' +
+        '| 项目地址：\n' +
+        ' [Gitee@默默](https://gitee.com/MuXi-Dream/download-reverse1999) ；\n' +
+        ' [GitHub@默默](https://github.com/ADarkDream/Download-Reverse1999)  \n' +
+        ' [API文档](https://apifox.com/apidoc/auth-shared-70082832-e502-49ac-a386-35af15bfd747?redirect=%2Fshared-70082832-e502-49ac-a386-35af15bfd747%2Fapi-186774719&&type=shareDoc)API文档主要是壁纸链接表及角色信息表，用于给图片分类，见下方[默默的小站]。如有需要API文档可找我要密码\r\n' +
+        '| 为方便使用，已将本项目功能上线，可前往[默默的小站](https://muxidream.cn/reverse1999)分类筛选并下载\r\n' +
+        '| 其它联系方式：[微博@玖优梦](https://weibo.com/u/6869134755)（微博私信我会自动回复链接）\r\n' +
+        '| 百度网盘链接：[重返未来1999](https://pan.baidu.com/s/1A4o9VM4kPa_vzWZEtHiZSA?pwd=1999)\n' +
+        '  预防网盘链接失效，可以保存：[1999资源总表：金山云文档](https://kdocs.cn/l/cjkqngyqWLTI)')
+    console.log('\r\n-----------------------------------下面是程序输出------------------------------------\r\n')
+    await start()
+}
 )
 
-
-async function start(filePath) {
+//主函数
+async function start() {
     try {
-        //判断是否存在filePath文件
-        if (!fs.existsSync(filePath))
-            throw new Error('没有找到' + filePath + '文件，使用本脚本程序前请先前往项目地址阅读使用说明')
-        //定义图片存储文件夹
-        const PCDir = './image/PCImg/'
-        const phoneDir = './image/phoneImg/'
         // 检查目标文件夹是否存在，如果不存在则创建
-        if (!fs.existsSync(PCDir)) fs.mkdirSync(PCDir, {recursive: true})
-        if (!fs.existsSync(phoneDir)) fs.mkdirSync(phoneDir, {recursive: true})
-        if (!fs.existsSync('./urlList')) fs.mkdirSync('./urlList', {recursive: true})
+        if (!fs.existsSync(PCDir)) fs.mkdirSync(PCDir, { recursive: true })
+        if (!fs.existsSync(phoneDir)) fs.mkdirSync(phoneDir, { recursive: true })
+        if (!fs.existsSync(listPath)) fs.mkdirSync(listPath, { recursive: true })
+        let allUrl = []
+        //创建版本时间和版本名称的映射对象
+        createTimeMap()
 
-        //从filePath文件中读取数据，并分割字符串
-        const data = fs.readFileSync(filePath).toString()
-        let allUrl = [...data.matchAll(/(https?|http|ftp|file):\/\/.*\.jpg/g)].map(match => match[0])
+        //判断是否存在filePath文件
+        if (fs.existsSync(filePath)) {
+            console.log('已读取到' + filePath + '文件，将下载本地文件内的链接')
+            //从filePath文件中读取数据，并分割字符串
+            const data = fs.readFileSync(filePath).toString()
+            allUrl = [...data.matchAll(/(https?|http|ftp|file):\/\/.*\.jpg/g)].map(match => match[0])
+        } else {
+            console.error('没有找到' + filePath + '文件，将使用深蓝接口进行下载全部图片')
+            //使用深蓝接口,并根据要下载的版本号清洗链接
+            allUrl = await getImgUrlByAPI()
+        }
         allUrl = [...new Set(allUrl)] //图片链接数组,通过Set函数去重
 
+        if (allUrl.length === 0) throw new Error('图片链接数组为空')
+        console.log('将要下载的图片数量为：', allUrl.length)
         //下载并获取图片信息数组
         allImgInfoArr = await Promise.all(
             //遍历图片链接数组
             allUrl.map(async (imgUrl) => {
                 //清洗数据，获取网址信息
-                const imgInfo = await getImgInfo(imgUrl)
+                const imgInfo = getImgInfo(imgUrl)
                 if (imgInfo === undefined) return
                 imgInfo.imgPath = PCDir + imgInfo.newName
                 imgInfo.sort = 0    //0为横屏壁纸
@@ -79,9 +80,9 @@ async function start(filePath) {
         await download(phoneDir)
 
         console.log('\r\n------------------------------------请查看以下说明-------------------------------------\r\n')
-        console.log('| 竖屏图片已下载到/image/phoneImg/目录下')
-        console.log('| 横屏图片已下载到/image/PCImg/目录下')
-        console.log('| 图片各类信息已保存到/urlList目录下')
+        console.log('| 竖屏图片已下载到' + phoneDir + '目录下')
+        console.log('| 横屏图片已下载到' + PCDir + '目录下')
+        console.log('| 图片各类信息已保存到' + listPath + '目录下')
         console.log('| 重复的图片只保留一份。')
 
 
@@ -98,40 +99,40 @@ async function start(filePath) {
             item.sort === 0 ? PCUrlArr.push(item) : phoneUrlArr.push(item)     //0为横屏,1为竖屏
         )
 
-        fs.writeFileSync('./urlList/allUrl.txt', allUrl.join('\r\n')) //全部图片链接
-        fs.writeFileSync('./urlList/allUrl.json', JSON.stringify(allImgInfoArr))//全部图片信息
-        fs.writeFileSync('./urlList/PCUrlList.json', JSON.stringify(PCUrlArr))//横屏图片信息
-        fs.writeFileSync('./urlList/phoneUrlList.json', JSON.stringify(phoneUrlArr))//竖屏图片信息
+        fs.writeFileSync(listPath + '/allUrl.txt', allUrl.join('\r\n')) //全部图片链接
+        fs.writeFileSync(listPath + '/allUrl.json', JSON.stringify(allImgInfoArr))//全部图片信息
+        fs.writeFileSync(listPath + '/PCUrlList.json', JSON.stringify(PCUrlArr))//横屏图片信息
+        fs.writeFileSync(listPath + '/phoneUrlList.json', JSON.stringify(phoneUrlArr))//竖屏图片信息
         console.log('\r\n--  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --\r\n')
         console.log('| 网址筛选成功,共' + allUrl.length + '个链接，存放到以下文件中（已去除重复链接）：')
-        console.log('| ./urlList/allUrlList.json 中存放全部壁纸信息[' + allImgInfoArr.length + '条]（JSON格式）')
-        console.log('| ./urlList/PCUrlList.json 中存放横屏壁纸信息[' + PCUrlArr.length + '条]（JSON格式）')
-        console.log('| ./urlList/phoneUrlList.json 中存放竖屏壁纸信息[' + phoneUrlArr.length + '条]（JSON格式）')
-        console.log('| ./urlList/allUrl.txt中存放全部壁纸链接（TXT格式,网址通过空格隔开,可以复制到其他下载器批量下载）')
-        if (errorUrlStr !== ''&&errorArr!==[]) {
-            fs.writeFileSync('./urlList/errorUrl.txt', errorUrlStr)
-            fs.writeFileSync('./urlList/errorUrlList.json', JSON.stringify(errorArr))
-            console.log('\r\n| 本次下载有图片下载出错,上述JSON文件中包含下载失败的图片信息，请手动修改错误的图片的分类信息')
-            console.log('| ./urlList/errorUrl.txt中存放可能下载出错的壁纸链接，请自行手动下载')
-            console.log('| ./urlList/errorUrl.json中存放可能下载出错的壁纸信息[' + errorArr.length + '条]（JSON格式）')
-            console.log('| 建议将文件夹image和urlList备份后,将errorUrl.txt复制并重命名为url.txt,再重新运行本脚本')
+        console.log('| ' + listPath + '/allUrlList.json 中存放全部壁纸信息[' + allImgInfoArr.length + '条]（JSON格式）')
+        console.log('| ' + listPath + '/PCUrlList.json 中存放横屏壁纸信息[' + PCUrlArr.length + '条]（JSON格式）')
+        console.log('| ' + listPath + '/phoneUrlList.json 中存放竖屏壁纸信息[' + phoneUrlArr.length + '条]（JSON格式）')
+        console.log('| ' + listPath + '/allUrl.txt中存放全部壁纸链接（TXT格式,网址通过空格隔开,可以复制到其他下载器批量下载）')
+        if (errorUrlStr !== '' && errorArr.length !== 0) {
+            fs.writeFileSync(listPath + '/errorUrl.txt', errorUrlStr)
+            fs.writeFileSync(listPath + '/errorUrlList.json', JSON.stringify(errorArr))
+            console.error('\r\n| 本次下载有图片下载出错,上述JSON文件中包含下载失败的图片信息，请手动修改错误的图片的分类信息')
+            console.error('| ' + listPath + '/errorUrl.txt中存放可能下载出错的壁纸链接，请自行手动下载')
+            console.error('| ' + listPath + '/errorUrl.json中存放可能下载出错的壁纸信息[' + errorArr.length + '条]（JSON格式）')
+            console.error('| 建议将已下载的图片和图片信息文件夹备份后,将errorUrl.txt复制并重命名为url.txt,再重新运行本脚本')
         }
         console.log('\r\n---------------------------图片下载结束，关闭本窗口即可退出程序----------------------------')
         console.log('---------------------------如果是脚本运行则使用“Ctrl+C键”停止运行----------------------------\r\n')
     } catch (err) {
-        console.log(err.message)
-        console.log('\r\n--------------------------------------已停止运行----------------------------------------\r\n')
+        console.error(err.message)
+        console.error('\r\n--------------------------------------已停止运行----------------------------------------\r\n')
     }
 }
 
 
 //数据清洗方法：获取图片信息
-async function getImgInfo(imgUrl) {
-//设定正则匹配规则
+function getImgInfo(imgUrl) {
+    //设定正则匹配规则
     const indexReg = /\d{1,3}/g //匹配连续的1-3位数字
-    // //分割图片信息
+    //分割图片信息
     const strList = imgUrl.split('/')
-    const time = Number(strList[strList.length - 2]) //这个规则匹配文件夹名，如：20231114
+    const time = strList[strList.length - 2] //这个规则匹配文件夹名，如：20231114
     const oldName = strList[strList.length - 1].replace(/%20/g, ' ')   //获取图片名称并替换20%为空格，例如：185%201125x2436_16e74393815d4aacbbbbb60c8f106de0.jpg
     let index = Number(oldName.match(indexReg)[0]) //匹配名字开头1-3位连续的数字
     if (oldName === "Rock'n'roll!-1125x2436_69c37999272740aeb905e5d98d3efd68.jpg") index = 1 //例外情况，手动排除
@@ -139,47 +140,13 @@ async function getImgInfo(imgUrl) {
     const [name, halfName] = oldName.split('_')
     const [hash, format] = halfName.split('\.')   //分割.符号左右部分, 获取文件后缀名(format)
     const newName = (name + '.' + format)//拼接新名称
-    //region判断版本
-    let version
-    let versionName
-    if (time === 20230325 || time === 20230328) {
-        version = 10
-        versionName = 'V1.0_公测及之前'
-    } else if (time === 20230712) {
-        version = 11
-        versionName = 'V1.1_雷米特杯失窃案'
-    } else if (time === 20230823) {
-        version = 12
-        versionName = 'V1.2_绿湖噩梦'
-    } else if (time === 20231003 || time === 20231031) {
-        version = 13
-        versionName = 'V1.3_行至摩卢旁卡'
-    } else if (time === 20231114) {
-        version = 14
-        versionName = 'V1.4_洞穴的囚徒'
-    } else if (time === 20231226) {
-        version = 15
-        versionName = 'V1.5_乌卢鲁运动会'
-    } else if (time === 20240205) {
-        version = 16
-        versionName = 'V1.6_朔日手记'
-    } else if (time === 20240327) {
-        version = 17
-        versionName = 'V1.7_今夜星光灿烂'
-    } else if (time === 20240501) {
-        version = 18
-        versionName = 'V1.8_再见，来亚什基'
-    } else if (time === 20240612) {
-        version = 19
-        versionName = 'V1.9_孤独之歌'
-    }
-    //因为官方上传时间间隔不固定，不好判断，所以这里写死判断，每次更新再改
-    else {//如果没来得及更新，统一为版本号为1999
-        version = 1999
-        versionName = '其他版本'
-    }
-    //endregion
-    return {time, oldName, newName, imgUrl, version, versionName, index}
+
+    //判断版本
+    const { version, versionName } = timeVersionMap[time]
+        ? timeVersionMap[time]
+        : { version: 1999, versionName: '其他版本' }
+
+    return { time, oldName, newName, imgUrl, version, versionName, index }
 }
 
 
@@ -203,6 +170,10 @@ async function downloadImg(newPath, imgInfo) {
         //检查图片分辨率，并进行分类
         const readStream = fs.createReadStream(PCImgPath)
         const dimensions = await probe(readStream)
+        imgInfo.height = dimensions.height
+        imgInfo.width = dimensions.width
+        // console.log('dimensions', dimensions)
+
         readStream.destroy()       // 关闭流
         // const dimensions = await sharp(PCImgPath).metadata()
         //判断是否是竖屏图片
@@ -228,6 +199,7 @@ async function downloadImg(newPath, imgInfo) {
 
 //重新下载下载失败的图片
 async function download(phoneDir) {
+    if (errorArr.length === 0) return
     console.log('\r\n--------------------------------------正在重新下载下载失败的图片--------------------------------------')
     const errorList = errorArr
     errorUrlStr = ''
@@ -242,8 +214,8 @@ async function download(phoneDir) {
         }))
     allImgInfoArr = mergeArrays(allImgInfoArr, result) //合并两个数组
 
-    cycle++
-    if (cycle >2) return console.log('已重试三次下载，仍有错误，已退出递归')
+    cycle--
+    if (cycle === 0) return console.log('已重试多次下载，仍有错误，已退出递归')
     if (errorUrlStr !== '') await download(phoneDir) //如果还有下载错误，则递归
     console.log('--------------------------------------下载失败的图片已成功重新下载--------------------------------------')
 }
@@ -257,4 +229,69 @@ function mergeArrays(target, update) {
     update.forEach(item => obj[item.imgUrl] = item)
 
     return Object.values(obj)// 将字典转换回数组
+}
+
+//从官方接口获取图片链接
+const getImgUrl = async (pageSize = 1) => {
+    try {
+        const response = await fetch('https://re.bluepoch.com/activity/official/websites/picture/query', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                current: 1,
+                pageSize
+            })
+        })
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`)
+        }
+
+        const result = await response.json()
+        const { code, data, msg } = result
+
+        if (code === 200) {
+            const { pageData, total, current, pageSize } = data
+            console.log(`共有${total}条数据，当前第${current}页，每页${pageSize}条数据`)
+            const urlArr = pageData.map(item => item.pictureUrl).filter(url => url !== undefined)
+            // console.log(urlArr)
+            return { urlArr, total }
+        }
+    } catch (error) {
+        console.error('获取图片链接失败:', error)
+    }
+}
+
+//根据要下载的版本号清洗链接
+const getImgUrlByAPI = async () => {
+    //获取最新一张，获取总数
+    const { total } = await getImgUrl()
+    //获取全部链接
+    const { urlArr } = await getImgUrl(total)
+    //下载全部
+    if (versions.length === 0) {
+        console.log('将要下载全部以影像之图片')
+        return urlArr
+    }
+    //下载目标版本
+    console.log('将要下载版本为：' + targetVersions.join(',') + '的以影像之图片')
+    const targetTimes = Object.keys(timeVersionMap).filter(time =>
+        targetVersions.includes(timeVersionMap[time].version)
+    )
+
+    // 筛选包含 targetTimes 的链接
+    return urlArr.filter(url =>
+        targetTimes.some(time => url.includes(`/PICTURE/${time}/`))
+    )
+}
+
+const createTimeMap = () => {
+    // 创建 time 和 version+versionName 的映射对象
+    versions.forEach(item => {
+        item.time.forEach(time => {
+            timeVersionMap[time] = { version: item.version, versionName: item.versionName }
+        })
+    })
 }

@@ -127,6 +127,6 @@ dist
 /.idea/modules.xml
 /.idea/inspectionProfiles/Project_Default.xml
 /.idea/UniappTool.xml
-/url-1.0-1.9版本.txt
-/url-2.txt
 /.idea/vcs.xml
+
+helper.json

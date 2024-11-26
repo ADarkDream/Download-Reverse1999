@@ -4,6 +4,7 @@
   "description": "",
   "main": "download.js",
   "scripts": {
+    "start": "node download.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "pkg": "pkg . -t node18-win-x64 --out-path=dist/"
   },
