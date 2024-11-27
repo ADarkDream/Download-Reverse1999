@@ -120,6 +120,7 @@ dist
 /urlList/
 /*.exe
 /备忘录.md
+/备忘.md
 
 /.idea/.gitignore
 /.idea/Download-Reverse1999.iml
