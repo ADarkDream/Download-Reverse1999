@@ -1,0 +1,117 @@
+{
+    "mode": "download",
+    "port": 3000,
+    "localVersion": "1.4.0",
+    "isCheckUpadte": true,
+    "waitTime": 5000,
+    "PCDir": "./image/PCImg/",
+    "phoneDir": "./image/phoneImg/",
+    "listPath": "./urlList/",
+    "maxConcurrent": 3,
+    "filePath": "./url.txt",
+    "targetVersions": [
+        12
+    ],
+    "versions": [
+        {
+            "time": [
+                20230325,
+                20230328
+            ],
+            "version": 10,
+            "versionName": "V1.0_公测及之前"
+        },
+        {
+            "time": [
+                20230712
+            ],
+            "version": 11,
+            "versionName": "V1.1_雷米特杯失窃案"
+        },
+        {
+            "time": [
+                20230823
+            ],
+            "version": 12,
+            "versionName": "V1.2_绿湖噩梦"
+        },
+        {
+            "time": [
+                20231003,
+                20231031
+            ],
+            "version": 13,
+            "versionName": "V1.3_行至摩卢旁卡"
+        },
+        {
+            "time": [
+                20231114
+            ],
+            "version": 14,
+            "versionName": "V1.4_洞穴的囚徒"
+        },
+        {
+            "time": [
+                20231226
+            ],
+            "version": 15,
+            "versionName": "V1.5_乌卢鲁运动会"
+        },
+        {
+            "time": [
+                20240205
+            ],
+            "version": 16,
+            "versionName": "V1.6_朔日手记"
+        },
+        {
+            "time": [
+                20240327
+            ],
+            "version": 17,
+            "versionName": "V1.7_今夜星光灿烂"
+        },
+        {
+            "time": [
+                20240501
+            ],
+            "version": 18,
+            "versionName": "V1.8_再见，来亚什基"
+        },
+        {
+            "time": [
+                20240612
+            ],
+            "version": 19,
+            "versionName": "V1.9_孤独之歌"
+        },
+        {
+            "time": [
+                20240723
+            ],
+            "version": 20,
+            "versionName": "V2.0_飞驰明日之城"
+        },
+        {
+            "time": [
+                20240902
+            ],
+            "version": 21,
+            "versionName": "V2.1_77号往事"
+        },
+        {
+            "time": [
+                20241015
+            ],
+            "version": 22,
+            "versionName": "V2.2_忧郁的热带"
+        },
+        {
+            "time": [
+                20241126
+            ],
+            "version": 23,
+            "versionName": "V2.3_圣火纪行：东区黎明"
+        }
+    ]
+}
