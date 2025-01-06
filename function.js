@@ -142,11 +142,43 @@ const fun = {
                     `当前下载器版本为：${localVersion},最新下载器版本为：${download_version}\n` +
                     `如需更新请前往:${update_url} 下载最新版本\n` +
                     `${time}秒后开始执行主函数`)
-                await new Promise(resolve => setTimeout(resolve, wait_time))
+                await fun.countdown(time); // 开始倒计时
             } else console.log(`当前下载器版本为：${localVersion},当前已是最新版本\n`)
         } catch (error) {
             console.error('检查版本号失败', error);
         }
+    },
+    //暂停函数
+    countdown: async (time) => {
+        if (time <= 0) {
+            console.warn("继续运行");
+            return;
+        }
+        console.log(time + " 秒后继续运行");
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 等待 1 秒
+        await fun.countdown(time - 1); // 递归调用
+    },
+    //检查最新一张图片以及版本信息是否完整
+    checkLatestImgInfo: async () => {
+        //获取最新一张，获取总数
+        console.log('查询最新一张图片，获取总数');
+        const { urlArr, total } = await fun.getImgUrl()
+        const lastestUrl = urlArr[0]
+        const data = fun.getImgInfo(lastestUrl)
+        const { time } = data
+        if (!timeVersionMap[time]) {
+            console.warn("检测到版本信息不完整");
+            if (timeVersionMap["19991231"])
+                console.log("此版本信息没有官方更新时间time字段：", timeVersionMap["19991231"])
+
+            console.warn("官方最新一张图片信息如下,请补充版本信息");
+            console.log(data);
+            console.warn("如果需要补充版本信息，请在config.json文件中修改time数组、version字段和versionName字段，并重新启动程序。详细字段说明请阅读readme.md文档");
+            const time = (wait_time / 1000).toFixed(0) || 5
+            console.log("如果忽略此问题，本程序将在" + time + "秒后开始下载");
+            await fun.countdown(time); // 开始倒计时
+        }
+        return { total }
     },
     //数据清洗方法：计算图片序号
     getIndex: (oldName, md5, version) => {
@@ -261,8 +293,9 @@ const fun = {
             }
             return imgInfo
         } catch (err) {
-            console.error(
-                `\n${err.message}\n图片 ${imgInfo.newName} 可能未移动成功，请检查路径：${imgInfo.imgPath} 或路径：${newPath + imgInfo.newName}\n如图片有问题请手动下载：${imgInfo.imgUrl}`
+            console.error(err);
+            console.warn(
+                `\n${err.message}\n图片 ${imgInfo.newName} 可能未移动成功，请检查路径：${PCImgPath} 或路径：${phoneImgPath}\n如图片有问题请手动下载：${imgInfo.imgUrl}`
             )
             errorUrlStr += imgInfo.imgUrl + '\n'
             errorArr.push(imgInfo)
@@ -307,7 +340,8 @@ const fun = {
     getImgUrlByAPI: async () => {
         //获取最新一张，获取总数
         console.log('查询最新一张图片，获取总数');
-        const { total } = await fun.getImgUrl()
+        const { total } = await fun.checkLatestImgInfo()
+
         //获取全部链接
         const { urlArr } = await fun.getImgUrl(total)
         console.log('查询全部图片链接成功\n');
@@ -339,6 +373,12 @@ const fun = {
             item.time.forEach(time => {
                 timeVersionMap[time] = { version: item.version, versionName: item.versionName }
             })
+            //新加的一条版本信息，没写更新时间的话
+            if (!item.time.length) {
+                console.warn("该条版本信息没有时间");
+                console.log(item);
+                timeVersionMap["19991231"] = { version: item.version, versionName: item.versionName }
+            }
         })
     }
 }

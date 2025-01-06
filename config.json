@@ -10,7 +10,7 @@
     "maxConcurrent": 3,
     "filePath": "./url.txt",
     "targetVersions": [
-        12
+        25
     ],
     "versions": [
         {
@@ -112,6 +112,18 @@
             ],
             "version": 23,
             "versionName": "V2.3_圣火纪行：东区黎明"
+        },
+        {
+            "time": [
+                20250101
+            ],
+            "version": 24,
+            "versionName": "V2.4_地球上最后的夜晚"
+        },
+        {
+            "time": [],
+            "version": 25,
+            "versionName": "V2.5_唐人街影话"
         }
     ]
 }

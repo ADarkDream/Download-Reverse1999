@@ -119,6 +119,7 @@ dist
 /image/
 /urlList/
 /*.exe
+/*.zip
 /备忘录.md
 /备忘.md
 
