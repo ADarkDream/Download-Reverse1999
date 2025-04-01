@@ -88,9 +88,9 @@
     "port": 3000,
 
     //每次启动时检查更新,false为关闭
-    "isCheckUpadte": true,
+    "isCheckUpdate": true,
 
-    //检查到更新时的等待时间，单位毫秒,isCheckUpadte为true时生效
+    //检查到更新时的等待时间，单位毫秒,isCheckUpdate为true时生效
     "waitTime": 5000,
 
     //横屏图片存储路径
