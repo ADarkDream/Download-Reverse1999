@@ -1,0 +1,12 @@
+/dist/*
+.local
+/node_modules/**
+
+
+**/*.svg
+**/*.sh
+
+/public/*
+auto-imports.d.ts
+components.d.ts
+robot

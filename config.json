@@ -1,5 +1,5 @@
 {
-  "mode": "download",
+  "mode": "server",
   "port": 3000,
   "localVersion": "1.4.0",
   "isCheckUpdate": true,

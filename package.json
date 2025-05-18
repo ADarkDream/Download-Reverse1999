@@ -4,7 +4,17 @@
   "author": "默默[https://gitee.com/MuXi-Dream]",
   "description": "本脚本程序仅用于批量下载1999国服官网的图片，仅作为技术分享，请勿用于其他用途。侵权请联系删除。",
   "main": "download.js",
+  "private": false,
   "scripts": {
+    "lint-staged": "lint-staged",
+    "check:type": "vue-tsc --build --noEmit --force",
+    "check:prettier": "prettier --check .",
+    "check": "eslint .",
+    "lint": "eslint . --fix",
+    "lint:prettier": "prettier . --write",
+    "lint:commitlint": "commitlint --edit $1",
+    "lint:diff": "git add . && pnpm exec lint-staged",
+    "commit": "pnpm run lint:diff && cz",
     "start": "node download.js",
     "server": "node 1999server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -12,8 +22,17 @@
     "build:server": "npm run pkg -- 1999server.js --output 1999批量下载端口代理_v1.0.1.exe",
     "pkg": "pkg --options no-warnings --targets node18-win-x64"
   },
+  "lint-staged": {
+    "**/*.{cjs,mjs,js,jsx,tsx,ts,less,md,json}": [
+      "pnpm exec eslint --fix"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-git"
+    }
+  },
   "pkg": {},
-  "private": true,
   "dependencies": {
     "@babel/register": "^7.23.7",
     "cors": "^2.8.5",
@@ -21,8 +40,27 @@
     "express": "^4.19.2",
     "http-proxy-middleware": "^3.0.3",
     "node-fetch": "^3.3.2",
-    "pkg": "^5.8.1",
     "probe-image-size": "^7.2.3",
     "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.7.1",
+    "@commitlint/config-conventional": "^19.7.1",
+    "@commitlint/types": "^19.5.0",
+    "@eslint/js": "^9.19.0",
+    "@typescript-eslint/eslint-plugin": "^8.22.0",
+    "@typescript-eslint/parser": "^8.22.0",
+    "cz-git": "^1.11.0",
+    "eslint": "^9.19.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "eslint-plugin-vue": "^9.32.0",
+    "globals": "^15.14.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "pkg": "^5.8.1",
+    "prettier": "^3.4.2",
+    "typescript-eslint": "^8.22.0",
+    "vue-eslint-parser": "^9.4.3"
   }
 }
