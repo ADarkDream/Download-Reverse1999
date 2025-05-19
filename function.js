@@ -27,10 +27,13 @@ const errorArr = []
 let allImgInfoArr = []
 // 版本时间和版本名称的映射对象
 let timeVersionMap = {}
-
+/**去重后的本地版本数字组成的数组*/
+const uniqueVersions = [
+  ...new Set(versions.map((item) => item.version).filter((v) => v !== undefined && v !== null)),
+]
 const pc_dir = PCDir || "./image/PCImg/"
 const phone_dir = phoneDir || "./image/phoneImg/"
-const wait_time = waitTime || 5000
+
 const list_path = listPath || "./urlList/"
 const path_all = list_path + "allUrl.txt"
 const path_all_json = list_path + "allUrlList.json"
@@ -38,6 +41,18 @@ const path_pc_json = list_path + "PCUrlList.json"
 const path_phone_json = list_path + "phoneUrlList.json"
 const path_error = list_path + "errorUrl.txt"
 const path_error_json = list_path + "errorUrlList.json"
+
+/**
+ * 格式化倒计时数字
+ * @returns {number}
+ */
+const formatWaitTime = (time) => {
+  const waitTimeMs = Number(time)
+  const waitTime = !isNaN(waitTimeMs) ? waitTimeMs : 5000
+  return Math.round(waitTime / 1000)
+}
+
+const wait_time = formatWaitTime(waitTime)
 
 const fun = {
   //主函数
@@ -58,7 +73,7 @@ const fun = {
         const data = fs.readFileSync(filePath).toString()
         allUrl = [...data.matchAll(/(https?|http|ftp|file):\/\/.*\.jpg/g)].map((match) => match[0])
       } else {
-        console.warn("没有找到" + filePath + "文件，将使用深蓝接口进行下载全部图片")
+        console.warn("没有找到" + filePath + "文件，将使用深蓝接口进行下载图片")
         //使用深蓝接口,并根据要下载的版本号清洗链接
         allUrl = await fun.getImgUrlByAPI()
       }
@@ -169,26 +184,26 @@ const fun = {
       const { download_version, server_version, update_url } = data
 
       if (!localVersion === download_version) {
-        const time = (wait_time / 1000).toFixed(0) || 0
         console.warn(
           "检查到更新版本\n" +
             `当前下载器版本为：${localVersion},最新下载器版本为：${download_version}\n` +
             `如需更新请前往:${update_url} 下载最新版本\n` +
-            `${time}秒后开始执行主函数`,
+            `${wait_time}秒后开始执行主函数`,
         )
-        await fun.countdown(time) // 开始倒计时
+        await fun.countdown(wait_time) // 开始倒计时
       } else console.log(`当前下载器版本为：${localVersion},当前已是最新版本\n`)
     } catch (error) {
       console.error("检查版本号失败", error)
     }
   },
-  //暂停函数
-  countdown: async (time) => {
+
+  /**倒计时函数*/
+  countdown: async (time, msg = "继续运行", end_msg = "继续运行") => {
     if (time <= 0) {
-      console.warn("继续运行")
+      console.warn(end_msg)
       return
     }
-    console.log(time + " 秒后继续运行")
+    console.log(time + " 秒后" + msg)
     await new Promise((resolve) => setTimeout(resolve, 1000)) // 等待 1 秒
     await fun.countdown(time - 1) // 递归调用
   },
@@ -197,24 +212,33 @@ const fun = {
     //获取最新一张，获取总数
     console.log("查询最新一张图片，获取总数")
     const { urlArr, total } = await fun.getImgUrl()
-    const lastestUrl = urlArr[0]
-    const data = fun.getImgInfo(lastestUrl)
+    const latestUrl = urlArr[0]
+    const data = fun.getImgInfo(latestUrl)
+    console.warn("最新一张图片信息如下:")
+    console.log(data)
     const { time } = data
+    await fun.checkVersionIsExist(time)
+    return { total }
+  },
+  /**检查本地是否存在该版本信息，并从云端更新*/
+  checkVersionIsExist: async (time, version) => {
     if (!timeVersionMap[time]) {
       console.warn("检测到版本信息不完整")
       if (timeVersionMap["19991231"])
-        console.log("此版本信息没有官方更新时间time字段：", timeVersionMap["19991231"])
-
-      console.warn("官方最新一张图片信息如下,请补充版本信息")
-      console.log(data)
+        console.log("此版本信息没有官方更新时间(time字段)：", timeVersionMap["19991231"])
       console.warn(
         "如果需要补充版本信息，请在config.json文件中修改time数组、version字段和versionName字段，并重新启动程序。详细字段说明请阅读readme.md文档",
       )
-      const time = (wait_time / 1000).toFixed(0) || 5
-      console.log("如果忽略此问题，本程序将在" + time + "秒后开始下载")
-      await fun.countdown(time) // 开始倒计时
+      console.warn(
+        "本程序将在" +
+          wait_time +
+          "秒后尝试从默默的小站获取版本信息，注意此操作会清空并覆盖本地版本信息",
+      )
+      await fun.countdown(wait_time) // 开始倒计时
+      await fun.getVersionInfo(time, version)
+      console.log("如果忽略此问题，本程序将在" + wait_time + "秒后开始下载")
+      await fun.countdown(wait_time) // 开始倒计时
     }
-    return { total }
   },
   //数据清洗方法：计算图片序号
   getIndex: (oldName, md5, version) => {
@@ -391,15 +415,26 @@ const fun = {
       console.log("将要下载全部以影像之图片")
       return urlArr
     }
-    const versionNames = targetVersions.map(
-      (version) => versions.find((item) => item.version === version)?.versionName || "其他版本",
-    )
+
+    //检查目标版本是否存在
+    for (const version of targetVersions) {
+      if (!uniqueVersions.includes(version)) {
+        console.warn("版本" + version + "的信息不存在")
+        await fun.checkVersionIsExist("", version)
+      }
+    }
+
+    const targetTimes = []
+    const targetVersionNames = []
+    versions.forEach((item) => {
+      if (targetVersions.includes(item.version)) {
+        targetTimes.push(item.time.join(","))
+        targetVersionNames.push(item.versionName)
+      }
+    })
 
     //下载目标版本
-    console.log("将要下载版本为：【" + versionNames.join(",") + "】的以影像之图片")
-    const targetTimes = Object.keys(timeVersionMap).filter((time) =>
-      targetVersions.includes(timeVersionMap[time].version),
-    )
+    console.log("将要下载版本为：【" + targetVersionNames.join(",") + "】的以影像之图片")
 
     // 筛选包含 targetTimes 的链接
     return urlArr.filter((url) => targetTimes.some((time) => url.includes(`/PICTURE/${time}/`)))
@@ -419,6 +454,52 @@ const fun = {
         timeVersionMap["19991231"] = { version: item.version, versionName: item.versionName }
       }
     })
+  },
+  /**获取1999版本信息*/
+  getVersionInfo: async (checkTime, checkVersion) => {
+    try {
+      const response = await fetch("https://muxidream.cn/api/getVersion?version=all", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      const { code, data, msg } = result
+
+      if (code === 200) {
+        const { versionList } = data
+        console.log("获取到的版本信息为：", versionList)
+
+        //判断需要检查的时间，服务器的版本信息是否存在于
+        let isExist = false
+        const newVersionList = versionList.map((item) => {
+          if (item.time.includes(Number(checkTime)) || item.version === Number(checkVersion))
+            isExist = true
+          return {
+            version: item.version,
+            versionName: item.versionName,
+            time: item.time,
+          }
+        })
+        if (isExist) {
+          config.versions = newVersionList
+          fs.writeFileSync(config_path, JSON.stringify(config, null, 2))
+          console.warn("版本信息已更新,请重新启动程序")
+          process.exit(0)
+        } else throw new Error("默默的小站版本信息未更新，请等待更新或自行添加版本信息")
+      } else throw new Error("获取默默的小站版本信息失败")
+    } catch (error) {
+      if (error.message === "fetch failed")
+        console.error("获取版本信息失败，本次未覆盖本地版本信息:", error)
+      else if (error.message) console.error(error.message + "，本次未覆盖本地版本信息:")
+      else console.error("获取版本信息失败，本次未覆盖本地版本信息:", error)
+    }
   },
 }
 
