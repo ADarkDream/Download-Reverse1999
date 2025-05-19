@@ -32,7 +32,7 @@ module.exports = {
   // 可以在文件顶部插入一个特殊标记，指定该文件已使用 Prettier 格式化
   insertPragma: false,
   // 换行符 ("auto"：根据当前操作系统自动选择换行符,"lf"：Linux/macOS,"crlf"：Windows,"cr":旧操作系统)
-  endOfLine: "lf",
+  endOfLine: "auto",
   // 这两个选项可用于格式化以给定字符偏移量（分别包括和不包括）开始和结束的代码
   // rangeStart：开始，rangeEnd：结束
   rangeStart: 0,

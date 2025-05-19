@@ -1,9 +1,12 @@
-const express = require("express")
-const { createProxyMiddleware } = require("http-proxy-middleware")
+import express from "express"
+import { createProxyMiddleware } from "http-proxy-middleware"
+import cors from "cors"
+import dotenv from "dotenv"
+import fun from "./function.js"
 const app = express()
-const cors = require("cors")
-require("dotenv").config()
-const { checkVersion } = require("./function")
+const { checkVersion } = fun
+
+dotenv.config() // 加载环境变量
 
 const port = 3000 //本地服务器端口号
 const waitTime = 5000 //单位毫秒
@@ -45,7 +48,7 @@ app.get("/", async (req, res) => {
 app.listen(port, async () => {
   await checkVersion()
   console.log(
-    `下载代理端口为： http://127.0.0.1:${port}\n` +
+    `下载代理地址为： http://127.0.0.1:${port}\n` +
       "请打开：https://muxidream.cn/reverse1999 进行批量下载\n" +
       "如果是exe程序运行，关闭本窗口，即可释放端口\n" +
       "如果是JS脚本运行，Ctrl+C键退出，即可释放端口",

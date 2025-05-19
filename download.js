@@ -1,8 +1,10 @@
-const express = require("express")
+import express from "express"
+import { createProxyMiddleware } from "http-proxy-middleware"
+import cors from "cors"
+import fs from "fs"
+import fun from "./function.js"
 const app = express()
-const { createProxyMiddleware } = require("http-proxy-middleware")
-const cors = require("cors")
-const fs = require("fs")
+const { start, checkVersion } = fun
 
 // 检查config.json是否存在，如果不存在则退出
 const config_path = "./config.json"
@@ -10,15 +12,12 @@ if (!fs.existsSync(config_path)) {
   app.listen(3000, async () => {
     console.error("配置文件config.json不存在，请将config.json文件放在当前目录下")
   })
-  return
 }
 const config = JSON.parse(fs.readFileSync(config_path, "utf-8"))
 
 //在代理模式时会自动切换为3000端口，因为网站检测的是3000端口，暂未支持自定义端口
 const port = config?.mode === "server" ? 3000 : config?.port || 3000
 const mode = config?.mode || "download"
-
-const { start, checkVersion } = require("./function")
 
 //#region 代理端口
 
@@ -94,7 +93,7 @@ app.listen(port, async () => {
   } else {
     console.warn("当前是代理模式")
     console.log(
-      `下载代理端口为： http://127.0.0.1:${port}\n` +
+      `下载代理地址为： http://127.0.0.1:${port}\n` +
         "请打开：https://muxidream.cn/reverse1999 进行批量下载\n" +
         "如果是exe程序运行，关闭本窗口，即可释放端口\n" +
         "如果是JS脚本运行，Ctrl+C键退出，即可释放端口",

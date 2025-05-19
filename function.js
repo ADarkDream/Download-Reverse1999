@@ -1,12 +1,15 @@
-const fs = require("fs")
-const https = require("https")
-const probe = require("probe-image-size") //检查图片分辨率
-require("dotenv").config()
+import fs from "fs"
+import https from "https"
+import probe from "probe-image-size" // 检查图片分辨率
+import semver from "semver"
+import dotenv from "dotenv"
+import { dic_md5 } from "./dictionary.js"
+dotenv.config()
 
 // 检查config.json是否存在，如果不存在则退出
 const config_path = "./config.json"
 if (!fs.existsSync(config_path))
-  return console.error("配置文件config.json不存在，请将config.json文件放在当前目录下")
+  console.error("配置文件config.json不存在，请将config.json文件放在当前目录下")
 const config = JSON.parse(fs.readFileSync(config_path, "utf-8"))
 const {
   localVersion,
@@ -20,7 +23,6 @@ const {
   targetVersions,
   versions,
 } = config
-const { dic_md5 } = require("./dictionary")
 
 let errorUrlStr = ""
 const errorArr = []
@@ -171,24 +173,25 @@ const fun = {
         },
       )
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`)
+        throw new Error(`HTTP 错误! 状态码: ${response.status}`)
       }
 
       const result = await response.json()
       const { code, msg, data } = result
-      console.log(result)
+      // console.log(result)
 
       if (code === 400 && msg) return console.error(msg)
       else if (code !== 200) return console.error("未知错误，检查版本号失败")
       else console.log("检查版本号成功")
       const { download_version, server_version, update_url } = data
-
-      if (!localVersion === download_version) {
+      if (semver.gt(localVersion, download_version)) {
+        console.error(
+          `当前下载器版本为：${localVersion},最新下载器版本为：${download_version}。请检查本地版本号是否有误。\n`,
+        )
+        await fun.countdown(wait_time) // 开始倒计时
+      } else if (semver.lt(localVersion, download_version)) {
         console.warn(
-          "检查到更新版本\n" +
-            `当前下载器版本为：${localVersion},最新下载器版本为：${download_version}\n` +
-            `如需更新请前往:${update_url} 下载最新版本\n` +
-            `${wait_time}秒后开始执行主函数`,
+          `检查到更新版本,当前下载器版本为：${localVersion},最新下载器版本为：${download_version}。\n如需更新请前往:${update_url}下载最新版本\n。${wait_time}秒后开始执行主函数`,
         )
         await fun.countdown(wait_time) // 开始倒计时
       } else console.log(`当前下载器版本为：${localVersion},当前已是最新版本\n`)
@@ -503,4 +506,4 @@ const fun = {
   },
 }
 
-module.exports = fun
+export default fun
