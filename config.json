@@ -1,7 +1,7 @@
 {
   "mode": "download",
   "port": 3000,
-  "localVersion": "1.4.0",
+  "localVersion": "1.4.1",
   "isCheckUpdate": true,
   "waitTime": 5000,
   "PCDir": "./image/PCImg/",
