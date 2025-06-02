@@ -1,0 +1,4 @@
+#此处指在提交信息(引导)完成之后，提交代码到暂存区之前执行lint-staged
+#但因为在commit脚本中执行了lint-staged,所以这里不需要再执行lint-staged
+#git add .
+#pnpm exec lint-staged

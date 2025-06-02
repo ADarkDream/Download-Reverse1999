@@ -1,0 +1,68 @@
+{
+  "name": "ts-express-template",
+  "version": "1.0.0",
+  "description": "默默的 TS-Express 后端模板，集合 esLint、prettier、commitlint 等审查相关库，cz-git、husky等代码提交库",
+  "main": "src/app.ts",
+  "type": "module",
+  "private": false,
+  "scripts": {
+    "prepare": "husky && node scripts/warn-env.js",
+    "lint-staged": "lint-staged",
+    "check:type": "vue-tsc --build --noEmit --force",
+    "check:prettier": "prettier --check .",
+    "check": "eslint .",
+    "lint": "eslint . --fix",
+    "lint:prettier": "prettier . --write",
+    "lint:commitlint": "commitlint --edit $1",
+    "lint:diff": "pnpm exec lint-staged",
+    "commit": "pnpm run lint:diff && cz",
+    "start": "cross-env NODE_ENV=development TS_NODE_PROJECT=tsconfig.dev.json nodemon --exec tsx src/app.ts",
+    "start:prod": "pnpm build && cross-env NODE_ENV=production tsx dist/app.js",
+    "build": "tsc",
+    "push": "git push Gitee base && git push origin base"
+  },
+  "keywords": [],
+  "author": "MoMo",
+  "license": "MIT",
+  "packageManager": "pnpm@10.11.0",
+  "lint-staged": {
+    "**/*.{cjs,mjs,js,jsx,tsx,ts,less,md,json}": [
+      "pnpm exec eslint --fix"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-git"
+    }
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@commitlint/types": "^19.8.1",
+    "@eslint/js": "^9.27.0",
+    "@types/cors": "^2.8.18",
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.21",
+    "@typescript-eslint/eslint-plugin": "^8.32.1",
+    "@typescript-eslint/parser": "^8.32.1",
+    "cross-env": "^7.0.3",
+    "cz-git": "^1.11.1",
+    "eslint": "^9.27.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.4.0",
+    "globals": "^16.2.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "nodemon": "^3.1.10",
+    "pkg": "^5.8.1",
+    "prettier": "^3.5.3",
+    "tsx": "^4.19.4",
+    "typescript-eslint": "^8.32.1"
+  }
+}
