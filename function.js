@@ -149,14 +149,15 @@ const fun = {
         )
       }
       console.warn(
-        "\n----------------------------图片下载结束，关闭本窗口即可退出程序-----------------------------\n" +
-          "---------------------------如果是脚本运行则使用“Ctrl+C键”停止运行----------------------------\n",
+        "\n----------------------------图片下载结束，关闭本窗口即可退出程序-----------------------------",
       )
+      process.exit(0)
     } catch (err) {
       console.error(
         err.message +
           "\n--------------------------------------已停止运行----------------------------------------\n",
       )
+      process.exit(1)
     }
   },
   //检查版本号
@@ -246,11 +247,10 @@ const fun = {
   //数据清洗方法：计算图片序号
   getIndex: (oldName, md5, version) => {
     let index = Number(oldName.match(/\d{1,3}/g)[0]) //匹配名字开头1-3位连续的数字
-    if (md5 === "69c37999272740aeb905e5d98d3efd68")
-      index = 1 //例外情况，手动排除
-    else if (version === 15)
-      index += 110 //例外情况，1.5版本序号清零，添加110
-    else if (version === 20) index = dic_md5[md5] //例外情况，2.0版本序号较乱，根据图片上的md5值来区分序号
+    const dic_index = dic_md5[md5]
+    // 例外情况靠字典解决
+    if (dic_index) index = dic_index
+    else if (version === 15) index += 110 //例外情况，1.5版本序号清零，添加110
     return index
   },
 
@@ -296,7 +296,7 @@ const fun = {
           })
         })
         .on("error", (err) => {
-          console.errpr(`下载失败: ${outputPath}`)
+          console.error(`下载失败: ${outputPath}`)
           fs.unlink(outputPath, () => reject(err))
         })
     })
@@ -368,8 +368,11 @@ const fun = {
     }
   },
 
-  //从官方接口获取图片链接
-  getImgUrl: async (pageSize = 1) => {
+  /**从官方接口获取图片链接
+   * @param {number} pageSize - 每页数量
+   * @param {number} current - 当前页码
+   */
+  getImgUrl: async (pageSize = 1, current = 1) => {
     try {
       const response = await fetch(
         "https://re.bluepoch.com/activity/official/websites/picture/query",
@@ -379,7 +382,7 @@ const fun = {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            current: 1,
+            current,
             pageSize,
           }),
         },
@@ -431,13 +434,19 @@ const fun = {
     const targetVersionNames = []
     versions.forEach((item) => {
       if (targetVersions.includes(item.version)) {
-        targetTimes.push(item.time.join(","))
+        for (const time of item.time) {
+          targetTimes.push(time)
+        }
         targetVersionNames.push(item.versionName)
       }
     })
 
     //下载目标版本
     console.log("将要下载版本为：【" + targetVersionNames.join(",") + "】的以影像之图片")
+    const data = urlArr.filter((url) =>
+      targetTimes.some((time) => url.includes(`/PICTURE/${time}/`)),
+    )
+    console.log(targetTimes, "筛选出" + data.length + "条数据", data)
 
     // 筛选包含 targetTimes 的链接
     return urlArr.filter((url) => targetTimes.some((time) => url.includes(`/PICTURE/${time}/`)))

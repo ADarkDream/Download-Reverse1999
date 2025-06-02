@@ -9,28 +9,8 @@
   "listPath": "./urlList/",
   "maxConcurrent": 3,
   "filePath": "./url.txt",
-  "targetVersions": [25],
+  "targetVersions": [10],
   "versions": [
-    {
-      "version": 1,
-      "versionName": "V1_未知版本",
-      "time": [20250507]
-    },
-    {
-      "version": 2,
-      "versionName": "V2_未知版本",
-      "time": [20250501]
-    },
-    {
-      "version": 3,
-      "versionName": "V3_未知版本",
-      "time": [20250325]
-    },
-    {
-      "version": 4,
-      "versionName": "V4_未知版本",
-      "time": [20250211]
-    },
     {
       "version": 10,
       "versionName": "V1.0_公测及之前",

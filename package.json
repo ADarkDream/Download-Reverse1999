@@ -3,7 +3,7 @@
   "version": "1.4.1",
   "author": "默默[https://gitee.com/MuXi-Dream]",
   "description": "本脚本程序仅用于批量下载1999国服官网的图片，仅作为技术分享，请勿用于其他用途。侵权请联系删除。",
-  "main": "download.js",
+  "main": "index.js",
   "type": "module",
   "private": false,
   "scripts": {
@@ -16,11 +16,11 @@
     "lint:commitlint": "commitlint --edit $1",
     "lint:diff": "git add . && pnpm exec lint-staged",
     "commit": "pnpm run lint:diff && cz",
-    "start": "cross-env NODE_ENV=development node download.js",
-    "start:prod": "cross-env NODE_ENV=production node download.js",
+    "start": "cross-env NODE_ENV=development node index.js",
+    "start:prod": "cross-env NODE_ENV=production node index.js",
     "server": "node 1999server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cross-env NODE_ENV=production  npm run pkg -- download.js --output 1999批量下载器_v1.4.1.exe",
+    "build": "cross-env NODE_ENV=production  npm run pkg -- index.js --output 1999批量下载器_v1.4.1.exe",
     "build:server": "cross-env NODE_ENV=production npm run pkg -- 1999server.js --output 1999批量下载端口代理_v1.0.1.exe",
     "pkg": "pkg --options no-warnings --targets node18-win-x64",
     "push": "git push origin master && git push Gitee master"

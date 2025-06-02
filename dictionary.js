@@ -1,5 +1,6 @@
-/**2.0版本命名较乱，根据图片上的md5值生成字典来排序*/
+/**部分版本命名较乱，根据图片上的md5值生成字典来排序*/
 export const dic_md5 = {
+  "69c37999272740aeb905e5d98d3efd68": 1,
   b04b536a9cc945a8b3367a17e4d00ec5: 258,
   ae41382274064d00b5b4be4de1d60daa: 259,
   "131a89c1568544fcb6f9ac50886546fc": 260,
@@ -35,4 +36,6 @@ export const dic_md5 = {
   a5f4c4f801e74720807858e5c18daba3: 290,
   "25aaf0f3ca924dbbbf1201debd4d2f5e": 291,
   "35238d97081c45518f8abd43c0ecdd99": 292,
+  "8726d09de4af408d96ce4a3969be6ed3": 502,
+  c964b8347e684fe9bf7cc3e364a23185: 537,
 }
