@@ -85,8 +85,11 @@ function addZero(value: number) {
   return value.toString()
 }
 
-export //需要一个时间戳,否则默认给出当前时间
-function getTime(timestamp = Date.now()) {
+/**
+ * 需要一个时间戳,否则默认给出当前时间
+ * @param [timestamp=Date.now()] 时间戳
+ */
+export function getTime(timestamp = Date.now()) {
   const d = new Date(timestamp)
   const month = addZero(d.getMonth() + 1)
   const day = addZero(d.getDate())
@@ -97,4 +100,14 @@ function getTime(timestamp = Date.now()) {
   // let time = date + ' ' + hour + ':' + minute + ':' + ss
   // if (hour.)
   return date + " " + hour + ":" + minute
+}
+
+/**
+ * 格式化倒计时数字
+ * @returns {number}
+ */
+export const formatWaitTime = (time: string | number): number => {
+  const waitTimeMs = Number(time)
+  const waitTime = !isNaN(waitTimeMs) ? waitTimeMs : 5000
+  return Math.round(waitTime / 1000)
 }

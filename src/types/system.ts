@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from "express"
 
 /**返回结果类型*/
-type Result<T> = {
+export type Result<T> = {
   code: number
   msg: string
   data?: T

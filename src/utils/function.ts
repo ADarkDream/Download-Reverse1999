@@ -1,15 +1,27 @@
 import fs from "fs"
 import https from "https"
+import path from "path"
+import { fileURLToPath } from "url"
 import probe from "probe-image-size" // 检查图片分辨率
 import semver from "semver"
 import dotenv from "dotenv"
-import { dic_md5 } from "./dictionary"
-dotenv.config()
+import { dic_md5 } from "@/utils/dictionary"
+import { formatWaitTime } from "@/utils/time"
+import { getImgUrl } from "@/utils/dataProcess"
+import { CONFIG, TimeVersionMap, ImageInfo } from "@/types/download"
+
+dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` })
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const isDev = process.env.NODE_ENV === "development"
 
 // 检查config.json是否存在，如果不存在则退出
-const config_path = "./config.json"
+const config_path = path.resolve(isDev ? __dirname : process.cwd(), process.env.CONFIG_PATH!)
+
 if (!fs.existsSync(config_path))
   console.error("配置文件config.json不存在，请将config.json文件放在当前目录下")
+
 const config = JSON.parse(fs.readFileSync(config_path, "utf-8"))
 const {
   localVersion,
@@ -22,15 +34,15 @@ const {
   listPath,
   targetVersions,
   versions,
-} = config
+} = config as CONFIG
 
 let errorUrlStr = ""
-const errorArr: string[] = []
+const errorArr: ImageInfo[] = []
 let allImgInfoArr = []
 // 版本时间和版本名称的映射对象
-let timeVersionMap: { [key: string]: { version: number; versionName: string } } = {}
+let timeVersionMap: TimeVersionMap = {}
 /**去重后的本地版本数字组成的数组*/
-const uniqueVersions = [
+const uniqueVersions = () => [
   ...new Set(versions.map((item) => item.version).filter((v) => v !== undefined && v !== null)),
 ]
 const pc_dir = PCDir || "./image/PCImg/"
@@ -43,16 +55,6 @@ const path_pc_json = list_path + "PCUrlList.json"
 const path_phone_json = list_path + "phoneUrlList.json"
 const path_error = list_path + "errorUrl.txt"
 const path_error_json = list_path + "errorUrlList.json"
-
-/**
- * 格式化倒计时数字
- * @returns {number}
- */
-const formatWaitTime = (time: string) => {
-  const waitTimeMs = Number(time)
-  const waitTime = !isNaN(waitTimeMs) ? waitTimeMs : 5000
-  return Math.round(waitTime / 1000)
-}
 
 const wait_time = formatWaitTime(waitTime)
 
@@ -88,7 +90,7 @@ const fun = {
       allImgInfoArr = allUrl.map(fun.getImgInfo).filter((imgInfo) => imgInfo !== undefined)
 
       console.log("预处理完成，开始下载")
-      await fun.batchDownload(allImgInfoArr, maxConcurrent || 3)
+      await fun.batchDownload(allImgInfoArr, maxConcurrent)
       console.log("所有文件下载完成,开始按分辨率分类")
 
       const tempImgInfoArr = await Promise.all(allImgInfoArr.map(fun.reWriteInfo))
@@ -149,15 +151,16 @@ const fun = {
         )
       }
       console.warn(
-        "\n----------------------------图片下载结束，关闭本窗口即可退出程序-----------------------------\n" +
-          "---------------------------如果是脚本运行则使用“Ctrl+C键”停止运行----------------------------\n",
+        "\n----------------------------图片下载结束，关闭本窗口即可退出程序-----------------------------",
       )
+      process.exit(0)
     } catch (err) {
       console.error(
         err instanceof Error &&
           err.message +
             "\n--------------------------------------已停止运行----------------------------------------\n",
       )
+      process.exit(1)
     }
   },
   //检查版本号
@@ -215,7 +218,7 @@ const fun = {
   checkLatestImgInfo: async () => {
     //获取最新一张，获取总数
     console.log("查询最新一张图片，获取总数")
-    const { urlArr, total } = await fun.getImgUrl()
+    const { urlArr, total } = await getImgUrl()
     const latestUrl = urlArr[0]
     const data = fun.getImgInfo(latestUrl)
     console.warn("最新一张图片信息如下:")
@@ -246,12 +249,12 @@ const fun = {
   },
   //数据清洗方法：计算图片序号
   getIndex: (oldName: string, md5: string, version: number) => {
-    let index = Number(oldName.match(/\d{1,3}/g)[0]) //匹配名字开头1-3位连续的数字
-    if (md5 === "69c37999272740aeb905e5d98d3efd68")
-      index = 1 //例外情况，手动排除
-    else if (version === 15)
-      index += 110 //例外情况，1.5版本序号清零，添加110
-    else if (version === 20) index = (dic_md5 as { [key: string]: number })[md5] //例外情况，2.0版本序号较乱，根据图片上的md5值来区分序号
+    let index = Number(oldName.match(/\d{1,3}/g)![0]) //匹配名字开头1-3位连续的数字
+    const dic_index = (dic_md5 as { [key: string]: number })[md5]
+
+    // 例外情况靠字典解决
+    if (dic_index) index = dic_index
+    else if (version === 15) index += 110 //例外情况，1.5版本序号清零，添加110
     return index
   },
 
@@ -282,7 +285,7 @@ const fun = {
    * @param {string} url - 下载链接
    * @param {string} outputPath - 保存路径
    */
-  downloadFile: async (url, outputPath) => {
+  downloadFile: async (url: string, outputPath: string) => {
     // console.log(`开始下载: ${url}`);
     return new Promise((resolve, reject) => {
       const file = fs.createWriteStream(outputPath)
@@ -297,7 +300,7 @@ const fun = {
           })
         })
         .on("error", (err) => {
-          console.errpr(`下载失败: ${outputPath}`)
+          console.error(`下载失败: ${outputPath}`)
           fs.unlink(outputPath, () => reject(err))
         })
     })
@@ -308,7 +311,7 @@ const fun = {
    * @param {Array} downloadList - 下载对象数组
    * @param {number} maxConcurrent - 最大并发数量
    */
-  batchDownload: async (downloadList, maxConcurrent) => {
+  batchDownload: async (downloadList: ImageInfo[], maxConcurrent = 3) => {
     let index = 0
 
     const startNext = async () => {
@@ -333,11 +336,11 @@ const fun = {
   },
 
   //图片信息终处理，判断图片分辨率并根据分辨率分类
-  reWriteInfo: async (imgInfo) => {
-    try {
-      const PCImgPath = imgInfo.imgPath
-      const phoneImgPath = phone_dir + imgInfo.newName
+  reWriteInfo: async (imgInfo: ImageInfo) => {
+    const PCImgPath = imgInfo.imgPath
+    const phoneImgPath = phone_dir + imgInfo.newName
 
+    try {
       // 确保文件已正确写入
       const stats = await fs.promises.stat(PCImgPath)
       if (stats.size === 0) throw new Error(`下载的文件${PCImgPath}为空 (0KB)`)
@@ -362,46 +365,10 @@ const fun = {
     } catch (err) {
       console.error(err)
       console.warn(
-        `\n${err.message}\n图片 ${imgInfo.newName} 可能未移动成功，请检查路径：${PCImgPath} 或路径：${phoneImgPath}\n如图片有问题请手动下载：${imgInfo.imgUrl}`,
+        `\n${err instanceof Error && err.message}\n图片 ${imgInfo.newName} 可能未移动成功，请检查路径：${PCImgPath} 或路径：${phoneImgPath}\n如图片有问题请手动下载：${imgInfo.imgUrl}`,
       )
       errorUrlStr += imgInfo.imgUrl + "\n"
       errorArr.push(imgInfo)
-    }
-  },
-
-  //从官方接口获取图片链接
-  getImgUrl: async (pageSize = 1): Promise<{ urlArr: string[]; total: number }> => {
-    try {
-      const response = await fetch(
-        "https://re.bluepoch.com/activity/official/websites/picture/query",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            current: 1,
-            pageSize,
-          }),
-        },
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`)
-      }
-
-      const result = await response.json()
-      const { code, data, msg } = result
-
-      if (code === 200) {
-        const { pageData, total, current, pageSize } = data
-        console.log(`共有${total}条数据，当前第${current}页，每页${pageSize}条数据`)
-        const urlArr = pageData.map((item) => item.pictureUrl).filter((url) => url !== undefined)
-        // console.log(urlArr)
-        return { urlArr, total }
-      } else throw new Error(msg || "未知错误，获取图片链接失败")
-    } catch (error) {
-      console.error("获取图片链接失败:", error)
     }
   },
 
@@ -412,7 +379,7 @@ const fun = {
     const { total } = await fun.checkLatestImgInfo()
 
     //获取全部链接
-    const { urlArr } = await fun.getImgUrl(total)
+    const { urlArr } = await getImgUrl(total)
     console.log("查询全部图片链接成功\n")
     //下载全部
     if (!targetVersions?.length) {
@@ -432,13 +399,19 @@ const fun = {
     const targetVersionNames: string[] = []
     versions.forEach((item) => {
       if (targetVersions.includes(item.version)) {
-        targetTimes.push(item.time.join(","))
+        for (const time of item.time) {
+          targetTimes.push(time)
+        }
         targetVersionNames.push(item.versionName)
       }
     })
 
     //下载目标版本
     console.log("将要下载版本为：【" + targetVersionNames.join(",") + "】的以影像之图片")
+    const data = urlArr.filter((url) =>
+      targetTimes.some((time) => url.includes(`/PICTURE/${time}/`)),
+    )
+    console.log(targetTimes, "筛选出" + data.length + "条数据", data)
 
     // 筛选包含 targetTimes 的链接
     return urlArr.filter((url) => targetTimes.some((time) => url.includes(`/PICTURE/${time}/`)))

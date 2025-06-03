@@ -3,6 +3,7 @@ import express, { Router } from "express"
 import { router_success, router_error } from "./controller"
 //导入子路由(二级路由)
 import test from "./test/index"
+import download from "./download/index"
 
 const router: Router = express.Router()
 
@@ -16,6 +17,11 @@ router.get("/", router_success)
  * */
 router.use("/test", test)
 
+/**
+ * download相关的路由模块
+ * 为其添加一级路由/download
+ * */
+router.use("/download", download)
 //* 这里添加一级路由
 
 //#endregion

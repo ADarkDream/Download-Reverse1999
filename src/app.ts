@@ -1,9 +1,10 @@
 // src/app.ts
 import dotenv from "dotenv" //环境变量的库
-dotenv.config({ path: `./.env.${process.env.NODE_ENV}` })
+dotenv.config({ path: `./.env.${process.env.NODE_ENV || "development"}` })
 import express from "express"
 import cors from "cors"
 import { send, errorHandler } from "@/middleware/index"
+import { reverse1999Proxy } from "@/proxy/index"
 import config from "@/configs/config.js"
 import type { Request, Response, NextFunction } from "express"
 //* 导入全部路由文件
@@ -41,6 +42,9 @@ app.use("/img", express.static("static/images"))
 
 //全局中间件，精简res.send()
 app.use(send as (req: Request, res: Response, next: NextFunction) => void)
+
+// 1999以影像之反向代理
+app.use("/download1999", reverse1999Proxy)
 
 //路由模块，导入全部路由
 app.use("/", routers)
