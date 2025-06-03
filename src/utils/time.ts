@@ -111,3 +111,19 @@ export const formatWaitTime = (time: string | number): number => {
   const waitTime = !isNaN(waitTimeMs) ? waitTimeMs : 5000
   return Math.round(waitTime / 1000)
 }
+
+/**
+ * 倒计时函数
+ * @param [time=5] 倒计时时间
+ * @param [msg='继续运行'] 倒计时结束后的提示
+ * @param [end_msg='继续运行'] 倒计时结束后的提示
+ * */
+export const countdown = async (time: number = 5, msg = "继续运行", end_msg = "继续运行") => {
+  if (time <= 0) {
+    console.warn(end_msg)
+    return
+  }
+  console.log(time + " 秒后" + msg)
+  await new Promise((resolve) => setTimeout(resolve, 1000)) // 等待 1 秒
+  await countdown(time - 1) // 递归调用
+}

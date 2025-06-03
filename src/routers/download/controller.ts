@@ -1,6 +1,6 @@
 import { asyncHandler } from "@/middleware/index"
 import { routerMerge } from "@/routers/controller"
-import fun from "@/utils/function"
+import fun from "@/utils/dataProcess"
 /**
  * 示例路由：
  * - [get] /download

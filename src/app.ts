@@ -7,6 +7,7 @@ import { send, errorHandler } from "@/middleware/index"
 import { reverse1999Proxy } from "@/proxy/index"
 import config from "@/configs/config.js"
 import type { Request, Response, NextFunction } from "express"
+import { checkVersion } from "@/utils/dataProcess"
 //* 导入全部路由文件
 import routers from "@/routers/index"
 
@@ -53,9 +54,11 @@ app.use("/", routers)
 app.use(errorHandler as (err: Error, req: Request, res: Response, next: NextFunction) => void)
 
 //启动服务器
-app.listen(BASE_PORT, () => {
+app.listen(BASE_PORT, async () => {
   console.warn(`|当前环境是：${process.env.Node_ENV} 模式`)
   console.warn(`|服务器已启动，正在监听 ${BASE_URL}:${BASE_PORT}`)
+  //TODO 根据设置项判断是否启动更新检查
+  await checkVersion()
 })
 
 //全局捕获未处理的异常，防止崩溃
