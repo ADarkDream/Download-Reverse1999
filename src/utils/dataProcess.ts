@@ -6,35 +6,17 @@ import probe from "probe-image-size" // 检查图片分辨率
 import semver from "semver"
 import dotenv from "dotenv"
 import { dic_md5 } from "@/utils/dictionary"
+import { config, download_status, resetDownloadStatus } from "@/configs/download"
 import { formatWaitTime, countdown } from "@/utils/time"
 
-import { CONFIG, TimeVersionMap, ImageInfo } from "@/types/download"
-import { api_checkUpdate } from "@/apis/download/update"
+import { TimeVersionMap, ImageInfo } from "@/types/download"
+import { api_checkUpdate, api_getVersionInfo } from "@/apis/download/update"
 import { api_getImgInfo } from "@/apis/download/download"
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` })
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-
-const config = getLocalConfig()
-const {
-  localVersion,
-  isCheckUpdate,
-  waitTime,
-  filePath,
-  PCDir,
-  phoneDir,
-  maxConcurrent,
-  listPath,
-  targetVersions,
-  versions,
-} = config
-
-/**去重后的本地版本数字组成的数组*/
-const uniqueVersions = () => [
-  ...new Set(versions.map((item) => item.version).filter((v) => v !== undefined && v !== null)),
-]
 
 /**从官方接口获取图片链接
  * @param {number} pageSize - 每页数量
@@ -45,7 +27,7 @@ export const getImgUrl = async (pageSize: number = 1, current: number = 1) => {
     const { code, data, msg } = await api_getImgInfo(pageSize, current)
     if (code === 200 && data) {
       const { pageData, total, current, pageSize } = data
-      console.log("获取图片链接成功", data)
+      // console.log("获取图片链接成功", data)
 
       console.log(`共有${total}条数据，当前第${current}页，每页${pageSize}条数据`)
       const urlArr = pageData
@@ -58,18 +40,6 @@ export const getImgUrl = async (pageSize: number = 1, current: number = 1) => {
     console.error("获取图片链接失败:", error)
     return { urlArr: [], total: 0 }
   }
-}
-
-/**获取本地配置文件config.json*/
-export function getLocalConfig(): CONFIG {
-  const isDev = process.env.NODE_ENV === "development"
-  // 检查config.json是否存在，如果不存在则退出
-  const config_path = path.resolve(isDev ? __dirname : process.cwd(), process.env.CONFIG_PATH!)
-
-  if (!fs.existsSync(config_path))
-    console.error("配置文件config.json不存在，请将config.json文件放在当前目录下")
-
-  return JSON.parse(fs.readFileSync(config_path, "utf-8"))
 }
 
 /**
@@ -91,6 +61,7 @@ export const checkAndCreateDir = (dirs: string[], recursive: boolean = true) => 
  * */
 export const getAllUrls = async () => {
   let allUrl = []
+  const filePath = config.filePath
   if (fs.existsSync(filePath)) {
     console.log("已读取到" + filePath + "文件，将下载本地文件内的链接")
     //从filePath文件中读取数据，并分割字符串
@@ -129,8 +100,8 @@ export const resortImgInfo = (imgInfoArr: ImageInfo[]) => {
  * 检查当前版本是否为最新版本
  */
 export const checkVersion = async (wait_time: number = 5) => {
-  if (!isCheckUpdate) return
-  console.warn("正在检查更新，若不需要每次启动时检查更新可在配置文件 config.json 中关闭")
+  if (!config.isCheckUpdate) return
+  console.warn("|正在检查更新，若不需要每次启动时检查更新可在配置文件 config.json 中关闭")
 
   try {
     const result = await api_checkUpdate()
@@ -140,34 +111,52 @@ export const checkVersion = async (wait_time: number = 5) => {
       console.error(msg || "未知错误，检查版本号失败")
       return
     }
-    console.log("检查版本号成功")
+    console.log("|检查版本号成功")
 
     const { download_version, server_version, update_url } = data
-
+    const localVersion = config.localVersion
     if (semver.gt(localVersion, download_version)) {
       console.error(
-        `当前下载器版本为：${localVersion}，最新下载器版本为：${download_version}。请检查本地版本号是否有误。`,
+        `|当前下载器版本为：${localVersion}，最新下载器版本为：${download_version}。请检查本地版本号是否有误。`,
       )
       await countdown(wait_time)
     } else if (semver.lt(localVersion, download_version)) {
       console.warn(
-        `检查到更新版本，当前版本：${localVersion}，最新版本：${download_version}。\n如需更新请前往：${update_url} 下载最新版。\n${wait_time} 秒后开始执行主函数。`,
+        `|检查到新版本，当前版本：${localVersion}，最新版本：${download_version}。\n|如需更新请前往：${update_url} 下载最新版。`,
       )
       await countdown(wait_time)
     } else {
-      console.log(`当前下载器版本为：${localVersion}，已是最新版本。\n`)
+      console.log(`|当前下载器版本为：${localVersion}，已是最新版本。\n`)
     }
   } catch (error) {
-    console.error("检查版本号失败:", error)
+    console.error("|检查版本号失败:", isDev ? error : "")
+  }
+}
+
+/**如果是下载模式，则结束进程，服务模式不结束*/
+const exit = (status = 0) => {
+  if (config.mode === "download") {
+    //下载模式，终止进程
+    process.exit(status)
+  } else {
+    //服务模式，不终止进程
+    if (status === 0) {
+      console.error("|服务正常退出")
+    } else {
+      throw new Error("终止本次服务")
+    }
   }
 }
 
 //#region 主函数
 
+/**当前环境*/
 const isDev = process.env.NODE_ENV === "development"
+/**当前路径*/
+const currentPath = isDev ? __dirname : process.cwd()
 
 // 检查config.json是否存在，如果不存在则退出
-const config_path = path.resolve(isDev ? __dirname : process.cwd(), process.env.CONFIG_PATH!)
+const config_path = path.resolve(currentPath, process.env.CONFIG_PATH!)
 
 let errorUrlStr = ""
 const errorArr: ImageInfo[] = []
@@ -175,10 +164,10 @@ let allImgInfoArr = []
 // 版本时间和版本名称的映射对象
 let timeVersionMap: TimeVersionMap = {}
 
-const pc_dir = PCDir || "./image/PCImg/"
-const phone_dir = phoneDir || "./image/phoneImg/"
+const pc_dir = isDev ? process.env.PC_DIR : config.PCDir || "./image/PCImg/"
+const phone_dir = isDev ? process.env.PHONE_DIR : config.phoneDir || "./image/phoneImg/"
 
-const list_path = listPath || "./urlList/"
+const list_path = isDev ? process.env.LIST_PATH : config.listPath || "./urlList/"
 const path_all = list_path + "allUrl.txt"
 const path_all_json = list_path + "allUrlList.json"
 const path_pc_json = list_path + "PCUrlList.json"
@@ -186,12 +175,13 @@ const path_phone_json = list_path + "phoneUrlList.json"
 const path_error = list_path + "errorUrl.txt"
 const path_error_json = list_path + "errorUrlList.json"
 
-const wait_time = formatWaitTime(waitTime)
+const wait_time = formatWaitTime(config.waitTime)
 
 const fun = {
   //主函数
   start: async () => {
     try {
+      resetDownloadStatus()
       // 检查目标文件夹是否存在，如果不存在则创建
       checkAndCreateDir([pc_dir, phone_dir, list_path])
 
@@ -201,13 +191,17 @@ const fun = {
       //获取要下载的链接
       const allUrl = await getAllUrls()
 
+      download_status.total = allUrl.length
+
       console.log("开始预处理图片数据")
 
       //预处理图片信息【清洗数据，获取网址信息】
       allImgInfoArr = allUrl.map(fun.getImgInfo).filter((imgInfo) => imgInfo !== undefined)
 
       console.log("预处理完成，开始下载")
-      await fun.batchDownload(allImgInfoArr, maxConcurrent)
+      download_status.type = 1
+      await fun.batchDownload(allImgInfoArr, config.maxConcurrent)
+      download_status.type = 2
       console.log("所有文件下载完成,开始按分辨率分类")
 
       const tempImgInfoArr = await Promise.all(allImgInfoArr.map(fun.reWriteInfo))
@@ -261,20 +255,21 @@ const fun = {
       console.warn(
         "\n----------------------------图片下载结束，关闭本窗口即可退出程序-----------------------------",
       )
-      process.exit(0)
+      download_status.type = 3
+      exit(0)
     } catch (err) {
       console.error(
         err instanceof Error &&
           err.message +
             "\n--------------------------------------已停止运行----------------------------------------\n",
       )
-      process.exit(1)
+      download_status.type = 4
+      exit(1)
     }
   },
   //检查最新一张图片以及版本信息是否完整
   checkLatestImgInfo: async () => {
     //获取最新一张，获取总数
-    console.log("查询最新一张图片，获取总数")
     const { urlArr, total } = await getImgUrl()
     const latestUrl = urlArr[0]
     const data = fun.getImgInfo(latestUrl)
@@ -388,7 +383,7 @@ const fun = {
       }
     }
 
-    const workers = Array.from({ length: maxConcurrent }, () => startNext())
+    const workers = Array.from({ length: config.maxConcurrent }, () => startNext())
     await Promise.all(workers)
   },
 
@@ -438,15 +433,20 @@ const fun = {
     //获取全部链接
     const { urlArr } = await getImgUrl(total)
     console.log("查询全部图片链接成功\n")
+
+    const targetVersions = config.targetVersions
     //下载全部
     if (!targetVersions?.length) {
       console.log("将要下载全部以影像之图片")
       return urlArr
     }
 
+    /**去重后的本地版本数字组成的数组*/
+    const uniqueVersions = [...new Set(config.versions.map((item) => item.version).filter(Boolean))]
+
     //检查目标版本是否存在
     for (const version of targetVersions) {
-      if (!uniqueVersions().includes(version)) {
+      if (!uniqueVersions.includes(version)) {
         console.warn("版本" + version + "的信息不存在")
         await fun.checkVersionIsExist("", version)
       }
@@ -454,10 +454,10 @@ const fun = {
 
     const targetTimes: string[] = []
     const targetVersionNames: string[] = []
-    versions.forEach((item) => {
+    config.versions.forEach((item) => {
       if (targetVersions.includes(item.version)) {
         for (const time of item.time) {
-          targetTimes.push(time)
+          targetTimes.push(time.toString())
         }
         targetVersionNames.push(item.versionName)
       }
@@ -468,7 +468,7 @@ const fun = {
     const data = urlArr.filter((url) =>
       targetTimes.some((time) => url.includes(`/PICTURE/${time}/`)),
     )
-    console.log(targetTimes, "筛选出" + data.length + "条数据", data)
+    console.log("更新时间为：", targetTimes, "\n筛选出" + data.length + "条数据\n", data)
 
     // 筛选包含 targetTimes 的链接
     return urlArr.filter((url) => targetTimes.some((time) => url.includes(`/PICTURE/${time}/`)))
@@ -477,7 +477,7 @@ const fun = {
   createTimeMap: () => {
     timeVersionMap = {}
     // 创建 time 和 version+versionName 的映射对象
-    versions.forEach((item) => {
+    config.versions.forEach((item) => {
       item.time.forEach((time) => {
         timeVersionMap[time] = { version: item.version, versionName: item.versionName }
       })
@@ -492,21 +492,10 @@ const fun = {
   /**获取1999版本信息*/
   getVersionInfo: async (checkTime: string, checkVersion?: number) => {
     try {
-      const response = await fetch("https://muxidream.cn/api/getVersion?version=all", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`)
-      }
-
-      const result = await response.json()
+      const result = await api_getVersionInfo()
       const { code, data, msg } = result
 
-      if (code === 200) {
+      if (code === 200 && data) {
         const { versionList } = data
         console.log("获取到的版本信息为：", versionList)
 
@@ -525,7 +514,7 @@ const fun = {
           config.versions = newVersionList
           fs.writeFileSync(config_path, JSON.stringify(config, null, 2))
           console.warn("版本信息已更新,请重新启动程序")
-          process.exit(0)
+          exit(2)
         } else throw new Error("默默的小站版本信息未更新，请等待更新或自行添加版本信息")
       } else throw new Error("获取默默的小站版本信息失败")
     } catch (err) {

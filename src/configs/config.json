@@ -1,6 +1,6 @@
 {
-  "mode": "download",
-  "port": 3000,
+  "mode": "server",
+  "port": 1999,
   "localVersion": "1.4.1",
   "isCheckUpdate": true,
   "waitTime": 5000,

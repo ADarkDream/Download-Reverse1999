@@ -120,10 +120,10 @@ export const formatWaitTime = (time: string | number): number => {
  * */
 export const countdown = async (time: number = 5, msg = "继续运行", end_msg = "继续运行") => {
   if (time <= 0) {
-    console.warn(end_msg)
+    console.warn("|" + end_msg)
     return
   }
-  console.log(time + " 秒后" + msg)
+  console.log("|" + time + " 秒后" + msg)
   await new Promise((resolve) => setTimeout(resolve, 1000)) // 等待 1 秒
-  await countdown(time - 1) // 递归调用
+  await countdown(time - 1, msg, end_msg) // 递归调用
 }

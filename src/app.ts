@@ -5,7 +5,10 @@ import express from "express"
 import cors from "cors"
 import { send, errorHandler } from "@/middleware/index"
 import { reverse1999Proxy } from "@/proxy/index"
-import config from "@/configs/config.js"
+import config from "@/configs/system.js"
+import { config as localConfigs } from "@/configs/download"
+import fun from "@/utils/dataProcess"
+import { countdown } from "@/utils/time"
 import type { Request, Response, NextFunction } from "express"
 import { checkVersion } from "@/utils/dataProcess"
 //* 导入全部路由文件
@@ -59,6 +62,13 @@ app.listen(BASE_PORT, async () => {
   console.warn(`|服务器已启动，正在监听 ${BASE_URL}:${BASE_PORT}`)
   //TODO 根据设置项判断是否启动更新检查
   await checkVersion()
+  if (localConfigs.mode === "download") {
+    console.warn("|本次启动模式：下载模式")
+    await countdown(5, "开始下载", "开始下载")
+    fun.start()
+  } else if (localConfigs.mode === "server") {
+    console.warn("|本次启动模式：本地服务器模式\n|正在等待接口请求")
+  }
 })
 
 //全局捕获未处理的异常，防止崩溃

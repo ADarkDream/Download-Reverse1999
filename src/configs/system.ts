@@ -6,8 +6,8 @@ export default {
   /**
    * 端口
    */
-  BASE_PORT: 9000, //后端主进程端口
-  SOCKET_PORT: 9999, //后端socket端口
+  BASE_PORT: 1999, //后端主进程端口
+  SOCKET_PORT: 2000, //后端socket端口
   /**
    * 七牛云配置
    */

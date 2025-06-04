@@ -4,7 +4,7 @@ import { Result } from "@/types/system"
 
 // 统一封装 axios 实例
 const apiClient = axios.create({
-  baseURL: process.env.AXIOS_BASE_URL,
+  baseURL: process.env.MOMO_BASE_API,
   timeout: 5000,
   headers: {
     "Content-Type": "application/json",
@@ -70,7 +70,7 @@ apiClient.interceptors.response.use(
       // sessionStorage.clear();
       console.error(result.msg)
       // location.href = "/" //"/login" // 跳转登录页
-      console.log("没有登录页，跳转到首页")
+      // console.log("没有登录页，跳转到首页")
       // api请求只能在catch中捕获401和402错误
       return Promise.reject(response)
     }
@@ -101,7 +101,7 @@ const request = async <T = any>(
   data?: { params?: T; data?: T },
   config?: AxiosRequestConfig,
 ) => {
-  console.log("config", config)
+  // console.log("config", config)
   const response = await apiClient({
     method,
     url,
@@ -110,7 +110,9 @@ const request = async <T = any>(
   })
 
   const result = transformResponse<T>(response)
-  // console.log("返回的数据", result)
+  // 打印每次请求的数据
+  if (process.env.PRINT_MOMO_RESPONSE === "true") console.log(url + "返回的数据", result)
+
   return result
 }
 

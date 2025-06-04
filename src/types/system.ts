@@ -10,11 +10,11 @@ export type Result<T> = {
 /**拓展Response类型*/
 export interface CustomResponse extends Response {
   /**正确返回函数，不传code值则默认为200*/
-  ss: (data: string | Result<any>, status?: number) => void
+  ss: (msgOrResult: string | Result<any>, status?: number) => void
   /**警告返回函数，不传code值则默认为300*/
-  ww: (data: string | Result<any>, status?: number) => void
+  ww: (msgOrResult: string | Result<any>, status?: number) => void
   /**错误返回函数，不传status值则默认为400*/
-  ee: (data: string | Error, status?: number) => void
+  ee: (msgOrError: string | Error, status?: number) => void
 }
 
 /**路由处理函数类型*/
