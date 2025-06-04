@@ -58,6 +58,7 @@ app.use(errorHandler as (err: Error, req: Request, res: Response, next: NextFunc
 
 //启动服务器
 app.listen(BASE_PORT, async () => {
+  console.error("[EXE启动首次运行会弹出联网权限申请，此次下载会失败，同意权限后重新打开exe即可]")
   console.warn(`|当前环境是：${process.env.Node_ENV} 模式`)
   console.warn(`|服务器已启动，正在监听 ${BASE_URL}:${BASE_PORT}`)
   //TODO 根据设置项判断是否启动更新检查

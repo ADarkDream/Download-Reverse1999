@@ -1,7 +1,7 @@
 {
   "mode": "server",
   "port": 1999,
-  "localVersion": "1.4.1",
+  "localVersion": "1.4.2",
   "isCheckUpdate": true,
   "waitTime": 5000,
   "PCDir": "./image/PCImg/",

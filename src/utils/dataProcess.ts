@@ -183,7 +183,7 @@ const fun = {
     try {
       resetDownloadStatus()
       // 检查目标文件夹是否存在，如果不存在则创建
-      checkAndCreateDir([pc_dir, phone_dir, list_path])
+      checkAndCreateDir([pc_dir!, phone_dir!, list_path!])
 
       //创建版本时间和版本名称的映射对象
       fun.createTimeMap()

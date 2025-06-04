@@ -133,3 +133,4 @@ helper.json
 .env.**
 !.template
 static/download/
+config.json

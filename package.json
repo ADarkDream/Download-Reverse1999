@@ -1,6 +1,6 @@
 {
   "name": "ts-express-template",
-  "version": "1.0.0",
+  "version": "1.4.2",
   "description": "默默的 TS-Express 后端模板，集合 esLint、prettier、commitlint 等审查相关库，cz-git、husky等代码提交库",
   "main": "src/app.ts",
   "type": "module",
@@ -19,6 +19,8 @@
     "start": "cross-env NODE_ENV=development TS_NODE_PROJECT=tsconfig.dev.json nodemon --exec tsx src/app.ts",
     "start:prod": "pnpm build && cross-env NODE_ENV=production tsx dist/app.js",
     "build": "tsc",
+    "pkg": "pkg --options no-warnings --targets node18-win-x64",
+    "build:app": "tsup && cross-env NODE_ENV=production npm run pkg -- dist/app.cjs --output 1999批量下载器_v1.4.2.exe",
     "push": "git push Gitee base && git push origin base"
   },
   "keywords": [],
@@ -36,13 +38,16 @@
     }
   },
   "dependencies": {
-    "axios": "^1.9.0",
+    "@types/probe-image-size": "^7.2.5",
+    "@types/semver": "^7.7.0",
+    "axios": "^0.27.2 ",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "http-proxy-middleware": "^3.0.5",
     "probe-image-size": "^7.2.3",
     "semver": "^7.7.2",
+    "tsup": "^8.5.0",
     "typescript": "^5.8.3"
   },
   "devDependencies": {

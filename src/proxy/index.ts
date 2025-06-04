@@ -9,6 +9,7 @@ const options: Options = {
   pathRewrite: {
     "^/download1999": "", // 注意这里需要写成正则字符串的形式
   },
+  // @ts-ignore
   onProxyReq: (proxyReq: ClientRequest, req: Request, res: Response) => {
     proxyReq.setHeader("Origin", "https://gamecms-res.sl916.com")
   },
