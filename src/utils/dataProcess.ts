@@ -15,8 +15,8 @@ import { api_getImgInfo } from "@/apis/download/download"
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` })
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+// const __filename = fileURLToPath(import.meta.url)
+// const __dirname = path.dirname(__filename)
 
 /**从官方接口获取图片链接
  * @param {number} pageSize - 每页数量
@@ -129,22 +129,18 @@ export const checkVersion = async (wait_time: number = 5) => {
       console.log(`|当前下载器版本为：${localVersion}，已是最新版本。\n`)
     }
   } catch (error) {
-    console.error("|检查版本号失败:", isDev ? error : "")
+    const msg = "|检查版本号失败"
+    if (error instanceof Error) console.error(msg + "：" + error.message)
+    else console.error(msg)
   }
 }
 
 /**如果是下载模式，则结束进程，服务模式不结束*/
-const exit = (status = 0) => {
-  if (config.mode === "download") {
-    //下载模式，终止进程
-    process.exit(status)
+export const exit = (status = 0) => {
+  if (status === 0) {
+    console.error("|关闭程序即可退出")
   } else {
-    //服务模式，不终止进程
-    if (status === 0) {
-      console.error("|服务正常退出")
-    } else {
-      throw new Error("终止本次服务")
-    }
+    throw new Error("终止本次服务")
   }
 }
 
@@ -153,10 +149,10 @@ const exit = (status = 0) => {
 /**当前环境*/
 const isDev = process.env.NODE_ENV === "development"
 /**当前路径*/
-const currentPath = isDev ? __dirname : process.cwd()
+// const currentPath = isDev ? __dirname : process.cwd()
 
 // 检查config.json是否存在，如果不存在则退出
-const config_path = path.resolve(currentPath, process.env.CONFIG_PATH!)
+const config_path = isDev ? "./src/configs/config.json" : "./config.json"
 
 let errorUrlStr = ""
 const errorArr: ImageInfo[] = []
@@ -514,7 +510,7 @@ const fun = {
           config.versions = newVersionList
           fs.writeFileSync(config_path, JSON.stringify(config, null, 2))
           console.warn("版本信息已更新,请重新启动程序")
-          exit(2)
+          exit(0)
         } else throw new Error("默默的小站版本信息未更新，请等待更新或自行添加版本信息")
       } else throw new Error("获取默默的小站版本信息失败")
     } catch (err) {

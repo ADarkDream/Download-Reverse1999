@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig, InternalAxiosRequestConfig, AxiosResponse } from "axios"
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios"
 
 import { Result } from "@/types/system"
 
@@ -13,7 +13,7 @@ const apiClient = axios.create({
 
 //#region 请求拦截器
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  (config: any) => {
     // const userInfoStore = useUserInfoStore()
     // if (userInfoStore.token) {
     //   config.headers.Authorization = `Bearer ${userInfoStore.token}`

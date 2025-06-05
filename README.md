@@ -44,10 +44,22 @@ pnpm start:prod
 ### 项目打包
 
 ```shell
-npm run build
+npm run build:app
 #or
-pnpm build
+pnpm build:app
 ```
+
+项目打包有一些局限性，因axios新版与pkg不兼容，因此需要如下操作：
+
+- 1、将axios降级为0.27.2版，
+- 2、将axios请求拦截器的config类型声明需要删除
+
+tsc打包TS为JS时也有问题，因此转用tsup进行打包
+
+- 1、tsup.config.ts中进行打包配置，因为tsup不支持动态环境变量，因此在其中手动导入生产环境的变量
+- 2、import.meta.url似乎无法使用，因此需要将import.meta.url及fileURLToPath等路径转换改换成静态路径
+
+后续考虑使用Electron封装项目
 
 ## 脚本说明(部分)
 

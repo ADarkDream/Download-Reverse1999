@@ -5,8 +5,8 @@ import dotenv from "dotenv"
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` })
 import { CONFIG } from "@/types/download"
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+// const __filename = fileURLToPath(import.meta.url)
+// const __dirname = path.dirname(__filename)
 
 /**本次下载状态*/
 export const download_status = {
@@ -20,7 +20,7 @@ export const download_status = {
 export const config: CONFIG = {
   mode: "server",
   port: 1999,
-  localVersion: "1.4.1",
+  localVersion: "1.4.2",
   isCheckUpdate: true,
   waitTime: 5000,
   PCDir: "./image/PCImg/",
@@ -130,30 +130,36 @@ export const resetDownloadStatus = () => {
 }
 
 /**获取本地配置文件config.json*/
-export const getLocalConfig = (): CONFIG => {
+export const getLocalConfig = async (): Promise<CONFIG> => {
   const isDev = process.env.NODE_ENV === "development"
   // 检查config.json是否存在，如果不存在则退出
-  const config_path = path.resolve(isDev ? __dirname : process.cwd(), process.env.CONFIG_PATH!)
+  const config_path = isDev ? "./src/configs/config.json" : "./config.json"
 
-  if (!fs.existsSync(config_path))
-    console.error("配置文件config.json不存在，请将config.json文件放在当前目录下")
+  if (!fs.existsSync(config_path)) {
+    console.error("|配置文件config.json不存在，需要config.json文件置于当前目录下才可运行")
+    console.warn("|将在当前目录下生成默认配置文件config.json")
+    fs.writeFileSync(config_path, JSON.stringify(config, null, 2))
+    console.warn(
+      "|默认配置文件config.json生成成功，可参考配置说明：\n|本项目仓库地址：https://gitee.com/MuXi-Dream/download-reverse1999#%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B",
+    )
+    console.log("\n|可退出程序，修改配置文件后再次启动程序\n")
+  }
 
   return JSON.parse(fs.readFileSync(config_path, "utf-8"))
 }
 
 /**读取本地配置并覆盖默认配置*/
-const combinedConfig = () => {
+const combinedConfig = async () => {
   try {
-    const localConfig = getLocalConfig()
+    const localConfig = await getLocalConfig()
     if (!localConfig) {
-      console.warn("未读取到本地配置,使用默认配置。")
+      console.warn("|未读取到本地配置,使用默认配置。")
       return
     }
     Object.assign(config, localConfig)
     // console.log("|配置信息如下:\n", config)
   } catch (e) {
-    console.error("读取本地配置失败,终止程序。", e)
-    process.exit(1)
+    console.error("|读取本地配置失败,请检查配置文件后再启动程序。", e)
   }
 }
 
