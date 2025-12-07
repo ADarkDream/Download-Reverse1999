@@ -75,10 +75,37 @@ export function asyncHandler(
   }
 }
 
+/**
+ * 强制将query或body中的某些字段转换为数组
+ * @param {string[]} fields 需要转换的字段
+ * @param {boolean} isBody 是query还是body
+ * @description 前端传数组过来时，需要手动处理。前端通过qs.stringify()格式化数组，当数组只有一个参数时，还会被移除[]然后被识别成字符串
+ * */
+export const forceQueryToArray = (fields: string[], isBody: boolean = false) => {
+  return (req: Request, res: CustomResponse | Response | any, next: NextFunction) => {
+    const tempData = isBody ? req.body : req.query
+    for (const key of fields) {
+      const val = tempData[key]
+      if (val !== undefined && !Array.isArray(val)) {
+        console.log("val", key, val)
+        tempData[key] = [val]
+      }
+    }
+    if (isBody) req.body = tempData
+    else {
+      req.query = tempData
+    }
+    console.log("req", req.query, req.body)
+
+    next()
+  }
+}
+
 const middleware = {
   send,
   errorHandler,
   asyncHandler,
+  forceQueryToArray,
 }
 
 export default middleware

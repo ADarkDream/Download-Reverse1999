@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios"
-
+import dotenv from "dotenv"
 import { Result } from "@/types/system"
-
+dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` })
 // 统一封装 axios 实例
 const apiClient = axios.create({
   baseURL: process.env.MOMO_BASE_API,

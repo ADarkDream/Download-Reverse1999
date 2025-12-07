@@ -58,7 +58,9 @@ app.use(errorHandler as (err: Error, req: Request, res: Response, next: NextFunc
 
 //启动服务器
 app.listen(BASE_PORT, async () => {
-  console.error("[EXE启动首次运行会弹出联网权限申请，此次下载会失败，同意权限后重新打开exe即可]")
+  console.error(
+    "\n[EXE启动首次运行会弹出联网权限申请，此次下载会失败，同意权限后重新打开exe即可]\n",
+  )
 
   //! 打包之后暂时还无法获取环境变量
   if (process.env.Node_ENV === "development") {

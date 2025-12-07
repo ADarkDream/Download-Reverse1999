@@ -14,5 +14,15 @@ export const api_getVersionInfo = async () => {
     version: "all",
   })
   // console.log("/api_getVersionInfo返回的数据为：", result)
-  return result
+
+  const { code, data, msg } = result
+
+  if (code === 200 && data) {
+    const { versionList } = data
+    // console.log("获取到的版本信息为：", versionList)
+    return versionList
+  } else {
+    console.log(result)
+    throw new Error("获取默默的小站版本信息失败")
+  }
 }

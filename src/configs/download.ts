@@ -4,13 +4,14 @@ import { fileURLToPath } from "url"
 import dotenv from "dotenv"
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` })
 import { CONFIG } from "@/types/download"
+import { api_getVersionInfo } from "@/apis/download/update"
 
 // const __filename = fileURLToPath(import.meta.url)
 // const __dirname = path.dirname(__filename)
 
 /**本次下载状态*/
 export const download_status = {
-  /**0:未开始下载 1:下载中 2:下载完成,3:下载结束，4:下载失败*/
+  /**0:未开始下载 1:下载中 2:下载完成,正在处理,3:处理结束，4:下载失败*/
   type: 0,
   /**总下载数量*/
   total: 0,
@@ -115,11 +116,11 @@ export const config: CONFIG = {
       versionName: "V2.6_疯癫与文明",
       time: [20250325],
     },
-    {
-      version: 27,
-      versionName: "V2.7_1987宇宙组曲",
-      time: [20250501, 20250507],
-    },
+    // {
+    //   version: 27,
+    //   versionName: "V2.7_1987宇宙组曲",
+    //   time: [20250501, 20250507],
+    // },
   ],
 }
 
@@ -139,12 +140,11 @@ export const getLocalConfig = async (): Promise<CONFIG> => {
     console.error("|配置文件config.json不存在，需要config.json文件置于当前目录下才可运行")
     console.warn("|将在当前目录下生成默认配置文件config.json")
     fs.writeFileSync(config_path, JSON.stringify(config, null, 2))
-    console.warn(
-      "|默认配置文件config.json生成成功，可参考配置说明：\n|本项目仓库地址：https://gitee.com/MuXi-Dream/download-reverse1999#%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B",
-    )
-    console.log("\n|可退出程序，修改配置文件后再次启动程序\n")
+    console.warn("|默认配置文件config.json生成成功,可参考配置说明：")
   }
-
+  console.log(
+    "\n|本项目仓库地址：https://gitee.com/MuXi-Dream/download-reverse1999#%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B\n|可退出程序，修改配置文件后再次启动程序\n",
+  )
   return JSON.parse(fs.readFileSync(config_path, "utf-8"))
 }
 
@@ -156,11 +156,72 @@ const combinedConfig = async () => {
       console.warn("|未读取到本地配置,使用默认配置。")
       return
     }
-    Object.assign(config, localConfig)
-    // console.log("|配置信息如下:\n", config)
+    // 获取云端版本信息，并合并
+    try {
+      const versionList = await api_getVersionInfo()
+      if (!versionList.length) throw new Error("获取版本信息失败")
+      // Object.assign(config, { versions: versionList || [] })
+      console.log("|获取云端版本信息成功")
+      const newVersions = versionList.map((item) => ({
+        version: item.version,
+        versionName: item.versionName,
+        time: item.time,
+      }))
+
+      console.log("config", config)
+
+      console.log("newVersions", newVersions)
+
+      // console.log(JSON.stringify(versionList))
+      const newConfig = mergeVersions(config, { versions: newVersions } as CONFIG)
+      console.log("aaa", newVersions)
+      console.log("ttt", newConfig)
+      Object.assign(config, newConfig)
+    } catch (e) {
+      console.error("|获取云端版本信息失败", e)
+    }
+    // console.log("ttt", localConfig)
+
+    const newConfig = mergeVersions(config, localConfig)
+    Object.assign(config, newConfig)
+    console.log("|合并默认/云端/本地数据之后,配置信息如下:\n", JSON.stringify(config))
   } catch (e) {
     console.error("|读取本地配置失败,请检查配置文件后再启动程序。", e)
   }
 }
 
 combinedConfig()
+
+function mergeVersions(localA: CONFIG, cloudB: CONFIG) {
+  // 创建版本映射表，优先使用localA的版本
+  const versionMap = new Map()
+
+  // 先添加localA的所有版本
+  localA.versions.forEach((item) => {
+    versionMap.set(item.version, {
+      version: item.version,
+      versionName: item.versionName,
+      time: [...item.time], // 创建time数组的副本
+    })
+  })
+
+  // 然后添加cloudB的版本，不覆盖已存在的版本
+  cloudB.versions.forEach((item) => {
+    if (!versionMap.has(item.version)) {
+      versionMap.set(item.version, {
+        version: item.version,
+        versionName: item.versionName,
+        time: [...item.time], // 创建time数组的副本
+      })
+    }
+  })
+
+  // 合并后的结果对象
+  const merged = {
+    ...localA, // 保留localA的其他配置
+    ...cloudB,
+    versions: Array.from(versionMap.values()).sort((a, b) => a.version - b.version), // 按version排序
+  }
+
+  return merged
+}

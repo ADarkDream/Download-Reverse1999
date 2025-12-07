@@ -9,7 +9,7 @@
   "listPath": "./urlList/",
   "maxConcurrent": 3,
   "filePath": "./url.txt",
-  "targetVersions": [10],
+  "targetVersions": [32],
   "versions": [
     {
       "version": 10,
@@ -100,6 +100,31 @@
       "version": 27,
       "versionName": "V2.7_1987宇宙组曲",
       "time": [20250501, 20250507]
+    },
+    {
+      "version": 28,
+      "versionName": "V2.8_复乐园",
+      "time": [20250610]
+    },
+    {
+      "version": 30,
+      "versionName": "V3.0_行于漫漫长路上",
+      "time": [20250722]
+    },
+    {
+      "version": 305,
+      "versionName": "V3.0.5_重返未来刺客信条联动",
+      "time": [20250902]
+    },
+    {
+      "version": 31,
+      "versionName": "V3.1_长夜鸣笛",
+      "time": [20251015]
+    },
+    {
+      "version": 32,
+      "versionName": "V3.2_迁流的盛宴",
+      "time": [20251125]
     }
   ]
 }

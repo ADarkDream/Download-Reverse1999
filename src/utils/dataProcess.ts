@@ -15,6 +15,33 @@ import { api_getImgInfo } from "@/apis/download/download"
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` })
 
+/**当前环境*/
+const isDev = process.env.NODE_ENV === "development"
+/**当前路径*/
+// const currentPath = isDev ? __dirname : process.cwd()
+
+// 检查config.json是否存在，如果不存在则退出
+const config_path = isDev ? "./src/configs/config.json" : "./config.json"
+
+let errorUrlStr = ""
+const errorArr: ImageInfo[] = []
+let allImgInfoArr = []
+/**版本时间和版本名称的映射对象*/
+let timeVersionMap: TimeVersionMap = {}
+
+const file_path = isDev ? process.env.FILE_PATH! : config.filePath || "./urt.txt"
+const pc_dir = isDev ? process.env.PC_DIR : config.PCDir || "./image/PCImg/"
+const phone_dir = isDev ? process.env.PHONE_DIR : config.phoneDir || "./image/phoneImg/"
+
+const list_path = isDev ? process.env.LIST_PATH : config.listPath || "./urlList/"
+const path_all = list_path + "allUrl.txt"
+const path_all_json = list_path + "allUrlList.json"
+const path_pc_json = list_path + "PCUrlList.json"
+const path_phone_json = list_path + "phoneUrlList.json"
+const path_error = list_path + "errorUrl.txt"
+const path_error_json = list_path + "errorUrlList.json"
+
+const wait_time = formatWaitTime(config.waitTime)
 // const __filename = fileURLToPath(import.meta.url)
 // const __dirname = path.dirname(__filename)
 
@@ -61,14 +88,20 @@ export const checkAndCreateDir = (dirs: string[], recursive: boolean = true) => 
  * */
 export const getAllUrls = async () => {
   let allUrl = []
-  const filePath = config.filePath
-  if (fs.existsSync(filePath)) {
-    console.log("已读取到" + filePath + "文件，将下载本地文件内的链接")
-    //从filePath文件中读取数据，并分割字符串
-    const data = fs.readFileSync(filePath).toString()
+  if (fs.existsSync(file_path)) {
+    console.log("已读取到" + file_path + "文件，将下载本地文件内的链接")
+    //从filePath文件中读取数据
+    const data = fs.readFileSync(file_path).toString()
+
+    //数组形式存储的，格式化后返回
+    if (data.startsWith("[")) {
+      const formatData = JSON.parse(data)
+      if (Array.isArray(formatData)) return formatData
+    }
+    //字符串形式存储的（中间无符号），分割字符串
     allUrl = [...data.matchAll(/(https?|http|ftp|file):\/\/.*\.jpg/g)].map((match) => match[0])
   } else {
-    console.warn("没有找到" + filePath + "文件，将使用深蓝接口进行下载图片")
+    console.warn("没有找到" + file_path + "文件，将使用深蓝接口进行下载图片")
     //使用深蓝接口,并根据要下载的版本号清洗链接
     allUrl = await fun.getImgUrlByAPI()
   }
@@ -78,7 +111,7 @@ export const getAllUrls = async () => {
   console.warn("将要下载的图片数量为：", allUrl.length)
   return allUrl
 }
-
+getAllUrls()
 /**
  * 根据官方上传时间(版本时间)和图片命名序号排序
  * - 排序逻辑：先按 time 从小到大，再按 index 从小到大
@@ -145,33 +178,6 @@ export const exit = (status = 0) => {
 }
 
 //#region 主函数
-
-/**当前环境*/
-const isDev = process.env.NODE_ENV === "development"
-/**当前路径*/
-// const currentPath = isDev ? __dirname : process.cwd()
-
-// 检查config.json是否存在，如果不存在则退出
-const config_path = isDev ? "./src/configs/config.json" : "./config.json"
-
-let errorUrlStr = ""
-const errorArr: ImageInfo[] = []
-let allImgInfoArr = []
-// 版本时间和版本名称的映射对象
-let timeVersionMap: TimeVersionMap = {}
-
-const pc_dir = isDev ? process.env.PC_DIR : config.PCDir || "./image/PCImg/"
-const phone_dir = isDev ? process.env.PHONE_DIR : config.phoneDir || "./image/phoneImg/"
-
-const list_path = isDev ? process.env.LIST_PATH : config.listPath || "./urlList/"
-const path_all = list_path + "allUrl.txt"
-const path_all_json = list_path + "allUrlList.json"
-const path_pc_json = list_path + "PCUrlList.json"
-const path_phone_json = list_path + "phoneUrlList.json"
-const path_error = list_path + "errorUrl.txt"
-const path_error_json = list_path + "errorUrlList.json"
-
-const wait_time = formatWaitTime(config.waitTime)
 
 const fun = {
   //主函数
@@ -484,35 +490,30 @@ const fun = {
         timeVersionMap["19991231"] = { version: item.version, versionName: item.versionName }
       }
     })
+    return timeVersionMap
   },
   /**获取1999版本信息*/
   getVersionInfo: async (checkTime: string, checkVersion?: number) => {
     try {
-      const result = await api_getVersionInfo()
-      const { code, data, msg } = result
+      const versionList = await api_getVersionInfo()
 
-      if (code === 200 && data) {
-        const { versionList } = data
-        console.log("获取到的版本信息为：", versionList)
-
-        //判断需要检查的时间，服务器的版本信息是否存在于
-        let isExist = false
-        const newVersionList = versionList.map((item) => {
-          if (item.time.includes(Number(checkTime)) || item.version === Number(checkVersion))
-            isExist = true
-          return {
-            version: item.version,
-            versionName: item.versionName,
-            time: item.time,
-          }
-        })
-        if (isExist) {
-          config.versions = newVersionList
-          fs.writeFileSync(config_path, JSON.stringify(config, null, 2))
-          console.warn("版本信息已更新,请重新启动程序")
-          exit(0)
-        } else throw new Error("默默的小站版本信息未更新，请等待更新或自行添加版本信息")
-      } else throw new Error("获取默默的小站版本信息失败")
+      //判断需要检查的时间，服务器的版本信息是否存在于
+      let isExist = false
+      const newVersionList = versionList.map((item) => {
+        if (item.time.includes(Number(checkTime)) || item.version === Number(checkVersion))
+          isExist = true
+        return {
+          version: item.version,
+          versionName: item.versionName,
+          time: item.time,
+        }
+      })
+      if (isExist) {
+        config.versions = newVersionList
+        fs.writeFileSync(config_path, JSON.stringify(config, null, 2))
+        console.warn("版本信息已更新,请重新启动程序")
+        exit(0)
+      } else throw new Error("默默的小站版本信息未更新，请等待更新或自行添加版本信息")
     } catch (err) {
       const msg = err instanceof Error && err?.message
       if (msg === "fetch failed") console.error("获取版本信息失败，本次未覆盖本地版本信息:", err)
