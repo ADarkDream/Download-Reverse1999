@@ -156,6 +156,7 @@ commit 信息输入完成之后会触发格式检查，检查无误才会将代�
 git remote add Github https://github.com/ADarkDream/Download-Reverse1999.git
 # and
 git remote add Gitee https://gitee.com/MuXi-Dream/download-reverse1999.git
+git remote add Gitee https://gitee.com/MuXi-Dream/download-reverse1999.git
 ```
 
 执行脚本`push`或命令`git push Gitee && git push Github`可将本地仓库代码提交到所有相关联的远程仓库
