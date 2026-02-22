@@ -77,7 +77,7 @@ tsc打包TS为JS时也有问题，因此转用tsup进行打包
 "start": "cross-env NODE_ENV=development TS_NODE_PROJECT=tsconfig.dev.json nodemon --exec tsx src/app.ts",//开发模式，额外使用tsconfig.dev.json配置文件
 "start:prod": "pnpm build && cross-env NODE_ENV=production tsx dist/app.js",//生产模式(开发模式自动打包并运行)
 "build": "tsc",                                                         //打包命令
-"push": "git push Gitee base && git push origin base"               //分别推送到Gitee和Github远程仓库
+"push": "git push Gitee master && git push Github master"               //分别推送到Gitee和Github远程仓库master分支
 ```
 
 ## 项目根目录结构说明
@@ -153,14 +153,14 @@ commit 信息输入完成之后会触发格式检查，检查无误才会将代�
 执行命令`git remote -v`查看当前项目关联的远程仓库，如果你没有关联仓库，执行如下命令可关联本项目的仓库：
 
 ``` bash
-git remote add origin https://github.com/ADarkDream/ts-express-template.git
+git remote add Github https://github.com/ADarkDream/Download-Reverse1999.git
 # and
-git remote add Gitee https://gitee.com/MuXi-Dream/ts-express-template.git
+git remote add Gitee https://gitee.com/MuXi-Dream/download-reverse1999.git
 ```
 
-执行脚本`push`或命令`git push Gitee && git push origin`可将本地仓库代码提交到所有相关联的远程仓库
+执行脚本`push`或命令`git push Gitee && git push Github`可将本地仓库代码提交到所有相关联的远程仓库
 
-或`git push Gitee master` or `git push origin master`可分别推送到两个仓库
+或`git push Gitee master` or `git push Github master`可分别推送到两个仓库的 master 分支
 
 二、自行提交
 

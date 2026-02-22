@@ -143,7 +143,7 @@ export const getLocalConfig = async (): Promise<CONFIG> => {
     console.warn("|默认配置文件config.json生成成功,可参考配置说明：")
   }
   console.log(
-    "\n|本项目仓库地址：https://gitee.com/MuXi-Dream/download-reverse1999#%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B\n|可退出程序，修改配置文件后再次启动程序\n",
+    "\n|本项目仓库地址：https://gitee.com/MuXi-Dream/download-reverse1999 \n|可退出程序，修改配置文件后再次启动程序\n",
   )
   return JSON.parse(fs.readFileSync(config_path, "utf-8"))
 }

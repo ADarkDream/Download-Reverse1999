@@ -13,7 +13,7 @@
 git checkout master
 
 # 2. 拉取最新的远程 master
-git pull origin master
+git pull Github master
 
 # 3. 合并 base 分支到 master
 git merge base
