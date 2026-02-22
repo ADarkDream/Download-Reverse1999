@@ -21,7 +21,7 @@
     "build": "tsc",
     "pkg": "pkg --options no-warnings --targets node18-win-x64",
     "build:app": "tsup && cross-env NODE_ENV=production npm run pkg -- dist/app.cjs --output dist/1999批量下载器_v1.4.2_win_x64.exe",
-    "push": "git push Gitee base && git push origin base"
+    "push": "git push Gitee master && git push origin master"
   },
   "keywords": [],
   "author": "MoMo",

@@ -9,7 +9,7 @@
   "listPath": "./urlList/",
   "maxConcurrent": 3,
   "filePath": "./url.txt",
-  "targetVersions": [32],
+  "targetVersions": [34],
   "versions": [
     {
       "version": 10,
@@ -125,6 +125,16 @@
       "version": 32,
       "versionName": "V3.2_迁流的盛宴",
       "time": [20251125]
+    },
+    {
+      "version": 33,
+      "versionName": "V3.3_远征记",
+      "time": [20260106]
+    },
+    {
+      "version": 34,
+      "versionName": "V3.4_不老春",
+      "time": [20260218]
     }
   ]
 }
