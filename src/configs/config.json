@@ -10,7 +10,7 @@
   "maxConcurrent": 3,
   "filePath": "./url.txt",
   "targetVersions": [
-    38
+    39
   ],
   "versions": [
     {
@@ -157,7 +157,7 @@
       ]
     },
     {
-      "version": 305,
+      "version": 30.5,
       "versionName": "V3.0.5_翡冷翠之春；入雅典记",
       "time": [
         20250902

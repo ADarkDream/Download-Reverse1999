@@ -303,7 +303,8 @@ const fun = {
   },
   //数据清洗方法：计算图片序号
   getIndex: (oldName: string, md5: string, version: number) => {
-    let index = Number(oldName.match(/\d{1,3}/g)![0]) //匹配名字开头1-3位连续的数字
+    const matchResult = oldName.match(/^\d+/) // 匹配索引数字
+    let index = matchResult ? Number(matchResult[0]) : 0 // 增加防空保护
     const dic_index = (dic_md5 as { [key: string]: number })[md5]
 
     // 例外情况靠字典解决
