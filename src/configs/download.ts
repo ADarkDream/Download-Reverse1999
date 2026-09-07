@@ -58,7 +58,7 @@ export const config: CONFIG = {
     },
     {
       version: 15,
-      versionName: "V1.5_乌卢鲁运动会",
+      versionName: "V1.5_复兴！乌卢鲁运动会",
       time: [20231226],
     },
     {
@@ -83,7 +83,7 @@ export const config: CONFIG = {
     },
     {
       version: 20,
-      versionName: "V2.0_飞驰明日之城",
+      versionName: "V2.0_飞驰！明日之城",
       time: [20240723],
     },
     {
@@ -116,11 +116,76 @@ export const config: CONFIG = {
       versionName: "V2.6_疯癫与文明",
       time: [20250325],
     },
-    // {
-    //   version: 27,
-    //   versionName: "V2.7_1987宇宙组曲",
-    //   time: [20250501, 20250507],
-    // },
+    {
+      version: 27,
+      versionName: "V2.7_1987宇宙组曲",
+      time: [20250501, 20250507],
+    },
+    {
+      version: 28,
+      versionName: "V2.8_复乐园",
+      time: [20250610],
+    },
+    {
+      version: 30,
+      versionName: "V3.0_行于漫漫长路上",
+      time: [20250722],
+    },
+    {
+      version: 30.5,
+      versionName: "V3.0.5_翡冷翠之春；入雅典记",
+      time: [20250902],
+    },
+    {
+      version: 31,
+      versionName: "V3.1_长夜鸣笛",
+      time: [20251015],
+    },
+    {
+      version: 32,
+      versionName: "V3.2_迁流的盛宴",
+      time: [20251125],
+    },
+    {
+      version: 33,
+      versionName: "V3.3_远征记",
+      time: [20260106],
+    },
+    {
+      version: 34,
+      versionName: "V3.4_不老春",
+      time: [20260218],
+    },
+    {
+      version: 35,
+      versionName: "V3.5_《绿松石蛇俱乐部》",
+      time: [20260330],
+    },
+    {
+      version: 36,
+      versionName: "V3.6_人们向何处去",
+      time: [20260413],
+    },
+    {
+      version: 37,
+      versionName: "V3.7_他者的悲哀",
+      time: [20260530],
+    },
+    {
+      version: 38,
+      versionName: "V3.8_世纪末尺度",
+      time: [20260708],
+    },
+    {
+      version: 38.5,
+      versionName: "V3.8.5_聚合浪潮",
+      time: [20260729],
+    },
+    {
+      version: 39,
+      versionName: "V3.9_重燃！流金之海",
+      time: [20260907],
+    },
   ],
 }
 

@@ -28,7 +28,7 @@
   "license": "MIT",
   "packageManager": "pnpm@10.11.0",
   "lint-staged": {
-    "**/*.{cjs,mjs,js,jsx,tsx,ts,less,md,json}": [
+    "**/*.{cjs,mjs,js,jsx,tsx,ts,less}": [
       "pnpm exec eslint --fix"
     ]
   },

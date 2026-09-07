@@ -1,5 +1,4 @@
 // @see: https://eslint.nodejs.cn/docs
-// @see: https://eslint.nodejs.cn/docs
 
 import globals from "globals"
 import eslint from "@eslint/js"
