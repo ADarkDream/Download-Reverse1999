@@ -1,7 +1,7 @@
 {
   "mode": "server",
   "port": 1999,
-  "localVersion": "1.4.2",
+  "localVersion": "1.4.3",
   "isCheckUpdate": true,
   "waitTime": 5000,
   "PCDir": "./image/PCImg/",
@@ -10,7 +10,7 @@
   "maxConcurrent": 3,
   "filePath": "./url.txt",
   "targetVersions": [
-    39
+    38.5
   ],
   "versions": [
     {
@@ -231,6 +231,14 @@
       "versionName": "V3.9_重燃！流金之海",
       "time": [
         20260907
+      ]
+    },
+    {
+      "version": 40,
+      "versionName": "V4.0_应门者",
+      "time": [
+        20261007,
+        20261020
       ]
     }
   ]

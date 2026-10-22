@@ -6,7 +6,7 @@ import cors from "cors"
 import { send, errorHandler } from "@/middleware/index"
 import { reverse1999Proxy } from "@/proxy/index"
 import config from "@/configs/system.js"
-import { config as localConfigs } from "@/configs/download"
+import { config as localConfigs, combinedConfig } from "@/configs/download"
 import fun from "@/utils/dataProcess"
 import { countdown } from "@/utils/time"
 import type { Request, Response, NextFunction } from "express"
@@ -71,6 +71,7 @@ app.listen(BASE_PORT, async () => {
 
   //TODO 根据设置项判断是否启动更新检查
   await checkVersion()
+  await combinedConfig()
   if (localConfigs.mode === "download") {
     console.warn("|本次启动模式：下载模式")
     await countdown(5, "开始下载", "开始下载")

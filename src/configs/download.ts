@@ -1,13 +1,8 @@
 import fs from "fs"
-import path from "path"
-import { fileURLToPath } from "url"
 import dotenv from "dotenv"
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` })
 import { CONFIG } from "@/types/download"
 import { api_getVersionInfo } from "@/apis/download/update"
-
-// const __filename = fileURLToPath(import.meta.url)
-// const __dirname = path.dirname(__filename)
 
 /**本次下载状态*/
 export const download_status = {
@@ -21,7 +16,7 @@ export const download_status = {
 export const config: CONFIG = {
   mode: "server",
   port: 1999,
-  localVersion: "1.4.2",
+  localVersion: "1.4.3",
   isCheckUpdate: true,
   waitTime: 5000,
   PCDir: "./image/PCImg/",
@@ -186,6 +181,11 @@ export const config: CONFIG = {
       versionName: "V3.9_重燃！流金之海",
       time: [20260907],
     },
+    {
+      version: 40,
+      versionName: "V4.0_应门者",
+      time: [20261007, 20261020],
+    },
   ],
 }
 
@@ -214,7 +214,7 @@ export const getLocalConfig = async (): Promise<CONFIG> => {
 }
 
 /**读取本地配置并覆盖默认配置*/
-const combinedConfig = async () => {
+export const combinedConfig = async () => {
   try {
     const localConfig = await getLocalConfig()
     if (!localConfig) {
@@ -233,14 +233,14 @@ const combinedConfig = async () => {
         time: item.time,
       }))
 
-      console.log("config", config)
+      // console.log("config", config)
 
-      console.log("newVersions", newVersions)
+      // console.log("newVersions", newVersions)
 
       // console.log(JSON.stringify(versionList))
       const newConfig = mergeVersions(config, { versions: newVersions } as CONFIG)
-      console.log("aaa", newVersions)
-      console.log("ttt", newConfig)
+      // console.log("aaa", newVersions)
+      // console.log("ttt", newConfig)
       Object.assign(config, newConfig)
     } catch (e) {
       console.error("|获取云端版本信息失败", e)
@@ -254,8 +254,6 @@ const combinedConfig = async () => {
     console.error("|读取本地配置失败,请检查配置文件后再启动程序。", e)
   }
 }
-
-combinedConfig()
 
 function mergeVersions(localA: CONFIG, cloudB: CONFIG) {
   // 创建版本映射表，优先使用localA的版本

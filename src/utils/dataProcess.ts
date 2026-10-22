@@ -1,7 +1,5 @@
 import fs from "fs"
 import https from "https"
-import path from "path"
-import { fileURLToPath } from "url"
 import probe from "probe-image-size" // 检查图片分辨率
 import semver from "semver"
 import dotenv from "dotenv"
@@ -17,8 +15,6 @@ dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` })
 
 /**当前环境*/
 const isDev = process.env.NODE_ENV === "development"
-/**当前路径*/
-// const currentPath = isDev ? __dirname : process.cwd()
 
 // 检查config.json是否存在，如果不存在则退出
 const config_path = isDev ? "./src/configs/config.json" : "./config.json"
@@ -111,7 +107,6 @@ export const getAllUrls = async () => {
   console.warn("将要下载的图片数量为：", allUrl.length)
   return allUrl
 }
-getAllUrls()
 /**
  * 根据官方上传时间(版本时间)和图片命名序号排序
  * - 排序逻辑：先按 time 从小到大，再按 index 从小到大

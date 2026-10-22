@@ -1,6 +1,6 @@
 {
   "name": "download1999",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "本脚本程序仅用于批量下载1999国服官网的图片，仅作为技术分享，请勿用于其他用途。侵权请联系删除。",
   "main": "src/app.ts",
   "type": "module",
@@ -26,7 +26,6 @@
   "keywords": [],
   "author": "默默[https://gitee.com/MuXi-Dream]",
   "license": "MIT",
-  "packageManager": "pnpm@10.11.0",
   "lint-staged": {
     "**/*.{cjs,mjs,js,jsx,tsx,ts,less}": [
       "pnpm exec eslint --fix"
