@@ -82,7 +82,7 @@ export const checkAndCreateDir = (dirs: string[], recursive: boolean = true) => 
  * 判断是否存在filePath（url.txt）文件，若存在则从中读取下载链接
  * 若不存在则从深蓝接口获取图片链接
  * */
-export const getAllUrls = async () => {
+export const getAllUrls = async (targetVersions: number[] = config.targetVersions) => {
   let allUrl = []
   if (fs.existsSync(file_path)) {
     console.log("已读取到" + file_path + "文件，将下载本地文件内的链接")
@@ -99,7 +99,7 @@ export const getAllUrls = async () => {
   } else {
     console.warn("没有找到" + file_path + "文件，将使用深蓝接口进行下载图片")
     //使用深蓝接口,并根据要下载的版本号清洗链接
-    allUrl = await fun.getImgUrlByAPI()
+    allUrl = await fun.getImgUrlByAPI(targetVersions)
   }
   allUrl = [...new Set(allUrl)] //图片链接数组,通过Set函数去重
 
@@ -176,9 +176,16 @@ export const exit = (status = 0) => {
 
 const fun = {
   //主函数
-  start: async () => {
+  start: async (targetVersions?: number[]) => {
+    if (![0, 3, 4].includes(download_status.type)) {
+      console.warn("|收到重复下载请求，忽略")
+      return
+    }
+
+    const requestedVersions = [...(targetVersions ?? config.targetVersions)]
     try {
       resetDownloadStatus()
+      download_status.type = 1
       // 检查目标文件夹是否存在，如果不存在则创建
       checkAndCreateDir([pc_dir!, phone_dir!, list_path!])
 
@@ -186,7 +193,7 @@ const fun = {
       fun.createTimeMap()
 
       //获取要下载的链接
-      const allUrl = await getAllUrls()
+      const allUrl = await getAllUrls(requestedVersions)
 
       download_status.total = allUrl.length
 
@@ -196,7 +203,6 @@ const fun = {
       allImgInfoArr = allUrl.map(fun.getImgInfo).filter((imgInfo) => imgInfo !== undefined)
 
       console.log("预处理完成，开始下载")
-      download_status.type = 1
       await fun.batchDownload(allImgInfoArr, config.maxConcurrent)
       download_status.type = 2
       console.log("所有文件下载完成,开始按分辨率分类")
@@ -423,7 +429,7 @@ const fun = {
   },
 
   //根据要下载的版本号清洗链接
-  getImgUrlByAPI: async () => {
+  getImgUrlByAPI: async (targetVersions: number[] = config.targetVersions) => {
     //获取最新一张，获取总数
     console.log("查询最新一张图片，获取总数")
     const { total } = await fun.checkLatestImgInfo()
@@ -432,7 +438,6 @@ const fun = {
     const { urlArr } = await getImgUrl(total)
     console.log("查询全部图片链接成功\n")
 
-    const targetVersions = config.targetVersions
     //下载全部
     if (!targetVersions?.length) {
       console.log("将要下载全部以影像之图片")

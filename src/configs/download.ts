@@ -16,7 +16,7 @@ export const download_status = {
 export const config: CONFIG = {
   mode: "server",
   port: 1999,
-  localVersion: "1.4.3",
+  localVersion: "1.4.4",
   isCheckUpdate: true,
   waitTime: 5000,
   PCDir: "./image/PCImg/",

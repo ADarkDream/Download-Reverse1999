@@ -1,7 +1,7 @@
 import { asyncHandler } from "@/middleware/index"
 import { routerMerge } from "@/routers/controller"
 import fun from "@/utils/dataProcess"
-import { config, download_status } from "@/configs/download"
+import { download_status } from "@/configs/download"
 
 /**
  * 将前端传递的数字数组格式化
@@ -14,8 +14,12 @@ const formatArray = (raw: any): number[] => {
   if (Array.isArray(raw)) {
     const tempArr = raw.map((v) => Number(v)).filter(Boolean)
     return [...new Set(tempArr)]
+  } else if (typeof raw === "number" || typeof raw === "string") {
+    const num = Number(raw)
+    if (!isNaN(num)) return [num]
   } else if (!raw) return []
-  else throw new Error("参数错误")
+
+  throw new Error("参数错误")
 }
 
 /**
@@ -27,7 +31,10 @@ const download_router_get = asyncHandler(async (req, res) => {
   if ([0, 3, 4].includes(download_status.type)) {
     console.log("|收到下载请求,使用默认配置开始下载")
     fun.start()
-  } else console.warn("|收到重复下载请求，忽略")
+  } else {
+    console.warn("|收到重复下载请求，忽略")
+    return res.ww("收到重复下载请求，请等待下载完成后再试")
+  }
   return res.ss("已开始下载，请等待下载完成")
 }, "下载失败")
 
@@ -55,10 +62,13 @@ const download_info_router_get = asyncHandler(async (req, res) => {
     return res.ww(`版本时间为${missingTimeArr.join(",")}的信息不存在，请创建该版本信息。`)
 
   if ([0, 3, 4].includes(download_status.type)) {
-    config.targetVersions = [...new Set(targetVersionArr)]
-    console.log(`|已收到下载请求，开始下载，目标版本为：${config.targetVersions}`)
-    fun.start()
-  } else console.warn("|收到重复下载请求，忽略")
+    const targetVersions = [...new Set(targetVersionArr)]
+    console.log(`|已收到下载请求，开始下载，目标版本为：${targetVersions}`)
+    fun.start(targetVersions)
+  } else {
+    console.warn("|收到重复下载请求，忽略")
+    return res.ww("收到重复下载请求，请等待下载完成后再试")
+  }
   return res.ss("已开始下载，请等待下载完成")
 }, "下载失败")
 
